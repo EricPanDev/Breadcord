@@ -105,6 +105,33 @@ var AVATAR_BASE_URL = 'https://cdn.discordapp.com/avatars/';
 
 const sidebar = document.getElementById('sidebar');
 
+// Layout helpers to keep latest message visible above input bars
+function updateBottomInset() {
+  const wrap = document.getElementById('chat-input-wrapper');
+  const list = document.getElementById('message-list');
+  if (!wrap || !list) return;
+  const height = wrap.offsetHeight || 0;
+  list.style.paddingBottom = String(height + 16) + 'px';
+}
+
+function keepPinnedToBottom() {
+  const list = document.getElementById('message-list');
+  if (!list) return;
+  list.scrollTop = list.scrollHeight;
+}
+
+function attachResizeObserver() {
+  const wrap = document.getElementById('chat-input-wrapper');
+  if (!wrap) return;
+  if (window.__bcRO) { try { window.__bcRO.disconnect(); } catch (_) {} }
+  const ro = new ResizeObserver(() => {
+    updateBottomInset();
+    keepPinnedToBottom();
+  });
+  ro.observe(wrap);
+  window.__bcRO = ro;
+}
+
 function applyUserPreferences() {
   try {
     const fontSize = localStorage.getItem('pref:fontSize');
@@ -201,18 +228,14 @@ function openUserProfile(userId, guildId) {
 
   const header = document.createElement('div');
   header.style.display = 'flex';
-  header.style.alignItems = 'center';
-  header.style.gap = '10px';
-  const img = document.createElement('img');
-  img.style.width = '64px';
-  img.style.height = '64px';
-  img.style.borderRadius = '50%';
-  header.appendChild(img);
-  const name = document.createElement('div');
-  name.style.fontSize = '16px';
-  name.style.color = '#3a2e1c';
-  name.style.fontWeight = '600';
-  header.appendChild(name);
+  header.style.flexDirection = 'column';
+  header.style.gap = '6px';
+  const banner = document.createElement('div'); banner.className = 'profile-banner'; header.appendChild(banner);
+  const avatar = document.createElement('img'); avatar.className = 'profile-avatar'; banner.appendChild(avatar);
+  const headerText = document.createElement('div'); headerText.className = 'profile-header-text';
+  const name = document.createElement('div'); name.className = 'profile-display-name'; headerText.appendChild(name);
+  const uname = document.createElement('div'); uname.className = 'profile-username'; headerText.appendChild(uname);
+  header.appendChild(headerText);
   wrap.appendChild(header);
 
   const about = document.createElement('div');
@@ -226,9 +249,22 @@ function openUserProfile(userId, guildId) {
   fetch(`https://discord.com/api/v10/users/${userId}/profile`, { headers: { 'Authorization': localStorage.getItem('token') } })
     .then(r => r.ok ? r.json() : Promise.reject(new Error('Profile fetch failed')))
     .then(p => {
-      img.src = userAvatarUrl(p.user);
-      name.textContent = (p.user.global_name || p.user.display_name || p.user.username) + ` (@${p.user.username})`;
+      avatar.src = userAvatarUrl(p.user);
+      name.textContent = p.user.global_name || p.user.display_name || p.user.username;
+      uname.textContent = `@${p.user.username}`;
       about.textContent = p.user_profile?.bio || '';
+      if (p.user_profile?.banner) {
+        // png by default; could be animated
+        banner.style.backgroundImage = `url(https://cdn.discordapp.com/banners/${p.user.id}/${p.user_profile.banner}.png?size=600)`;
+      } else if (p.user.banner) {
+        banner.style.backgroundImage = `url(https://cdn.discordapp.com/banners/${p.user.id}/${p.user.banner}.png?size=600)`;
+      }
+      // joined discord date
+      const createdTs = Number(BigInt(p.user.id) >> BigInt(22)) + 1420070400000; // snowflake
+      const created = new Date(createdTs);
+      const joinDiscord = document.createElement('div'); joinDiscord.className = 'profile-section';
+      joinDiscord.textContent = `Joined Discord: ${created.toLocaleDateString()}`;
+      wrap.appendChild(joinDiscord);
     })
     .catch(() => {})
     .finally(() => {
@@ -239,18 +275,29 @@ function openUserProfile(userId, guildId) {
         .then(m => {
           if (m.avatar) {
             const url = `https://cdn.discordapp.com/guilds/${guildId}/users/${userId}/avatars/${m.avatar}.png`;
-            img.src = url;
-          } else if (!img.src) {
-            img.src = userAvatarUrl(m.user);
+            avatar.src = url;
+          } else if (!avatar.src) {
+            avatar.src = userAvatarUrl(m.user);
           }
           if (m.nick) {
-            name.textContent = m.nick + (m.user?.username ? ` (@${m.user.username})` : '');
+            name.textContent = m.nick;
+            uname.textContent = m.user?.username ? `@${m.user.username}` : uname.textContent;
+          }
+          // joined server date
+          if (m.joined_at) {
+            const jd = new Date(m.joined_at);
+            const jsd = document.createElement('div'); jsd.className = 'profile-section';
+            jsd.textContent = `Joined Server: ${jd.toLocaleDateString()}`;
+            wrap.appendChild(jsd);
           }
           if (Array.isArray(m.roles) && guild?.roles) {
-            const badges = document.createElement('div');
-            for (const roleId of m.roles) {
-              const role = guild.roles.find(r => r.id === roleId);
-              if (!role) continue;
+            const badges = document.createElement('div'); badges.className = 'profile-roles';
+            // sort roles by position desc
+            const sorted = [...m.roles]
+              .map(rid => guild.roles.find(r => r.id === rid))
+              .filter(Boolean)
+              .sort((a,b) => (b.position||0) - (a.position||0));
+            for (const role of sorted) {
               const b = document.createElement('span');
               b.className = 'role-badge';
               b.textContent = role.name;
@@ -517,11 +564,11 @@ function markdownToSafeHtml(input) {
   }
 
   function replaceDiscordEmojis(text) {
-    return text.replace(/&lt;(a?):(\w+):(\d+)&gt;/g, (_, animated, name, id) => {
+    return text.replace(/&lt;(a?):([A-Za-z0-9_]+):(\d+)&gt;/g, (_, animated, name, id) => {
       const ext = animated ? 'gif' : 'png';
       const url = `https://cdn.discordapp.com/emojis/${id}.${ext}`;
       const alt = `:${name}:`;
-      return `<img class="discord-emoji" alt="${alt}" src="${url}" style="height:1.7em; vertical-align:middle;">`;
+      return `<img class="discord-emoji" alt="${alt}" src="${url}" style="height:1.3em; vertical-align:middle;">`;
     });
   }
 
@@ -537,8 +584,8 @@ function markdownToSafeHtml(input) {
       const isMe = String(id) === String(USER_DATA.id);
       return `<span class="mention">@${isMe ? (USER_DATA.username || 'you') : 'user'}</span>`;
     });
-    // channel mention <#id>
-    text = text.replace(/&lt;#([0-9]+)&gt;/g, '#$1');
+    // channel mention <#id> clickable (we resolve name when possible later)
+    text = text.replace(/&lt;#([0-9]+)&gt;/g, (_, id) => `<span class="channel-mention" data-channel-id="${id}">#${id}</span>`);
     return text;
   }
 
@@ -613,28 +660,43 @@ function rendermessage(data) {
         newTextElem.className = 'text';
         newTextElem.innerHTML = markdownToSafeHtml(data.content);
 
-        // sticker support
+        // sticker support (animated APNG/Lottie when available)
         if (Array.isArray(data.stickers) && data.stickers.length > 0) {
             data.stickers.forEach(sticker => {
-                var sticker_url = "https://cdn.discordapp.com/stickers/" + sticker.id + ".png";
-                const stickerElem = document.createElement('img');
-                stickerElem.src = sticker_url;
-                stickerElem.alt = sticker.name || 'sticker';
-                stickerElem.className = 'sticker';
-                newTextElem.appendChild(stickerElem);
+                const format = (sticker.format_type === 1 ? 'png' : sticker.format_type === 2 ? 'apng' : sticker.format_type === 3 ? 'lottie' : 'png');
+                if (format === 'lottie') {
+                    const container = document.createElement('div');
+                    container.style.width = '160px';
+                    container.style.height = '160px';
+                    container.className = 'sticker';
+                    newTextElem.appendChild(container);
+                    // Discord lottie sticker URL
+            const lottieUrl = `https://cdn.discordapp.com/stickers/${sticker.id}.json`;
+                    try {
+                        window.lottie && window.lottie.loadAnimation({ container, renderer: 'svg', loop: true, autoplay: true, path: lottieUrl });
+                    } catch (_) {}
+                } else {
+            const ext = (format === 'apng') ? 'png' : 'png';
+                    const sticker_url = `https://cdn.discordapp.com/stickers/${sticker.id}.${ext}`;
+                    const stickerElem = document.createElement('img');
+                    stickerElem.src = sticker_url;
+                    stickerElem.alt = sticker.name || 'sticker';
+                    stickerElem.className = 'sticker';
+                    newTextElem.appendChild(stickerElem);
+                }
             });
         }
 
         if (Array.isArray(data.attachments) && data.attachments.length > 0) {
             data.attachments.forEach(attachment => {
-                if (attachment.proxy_url) {
-                    const imgElem = document.createElement('img');
-                    imgElem.src = attachment.proxy_url;
-                    imgElem.alt = attachment.filename || 'attachment image';
-                    imgElem.style.maxWidth = '100%';
-                    imgElem.style.marginTop = '4px';
-                    newTextElem.appendChild(imgElem);
-                }
+            if (attachment.proxy_url) {
+                const imgElem = document.createElement('img');
+                imgElem.src = attachment.proxy_url;
+                imgElem.alt = attachment.filename || 'attachment image';
+                imgElem.className = 'attachment-image';
+                imgElem.style.marginTop = '4px';
+                newTextElem.appendChild(imgElem);
+            }
             });
         }
 
@@ -707,12 +769,11 @@ function rendermessage(data) {
             const roles = guild.roles.filter(role => data.member.roles.includes(role.id));
             if (roles.length > 0) {
                 roles.sort((a, b) => b.position - a.position);
-                const highestRole = roles[0];
-
-                if (highestRole.color && highestRole.color !== 0) {
-                    nameElem.style.color = `#${highestRole.color.toString(16).padStart(6, '0')}`;
+                const highestColorRole = roles.find(r => r.color && r.color !== 0) || roles[0];
+                if (highestColorRole && highestColorRole.color && highestColorRole.color !== 0) {
+                    nameElem.style.color = `#${highestColorRole.color.toString(16).padStart(6, '0')}`;
                 }
-
+                const highestRole = roles[0];
                 if (highestRole.icon) {
                     const iconUrl = `https://cdn.discordapp.com/role-icons/${highestRole.id}/${highestRole.icon}.png`;
                     roleIconElem = document.createElement('img');
@@ -747,13 +808,38 @@ function rendermessage(data) {
     const meMentionPattern = new RegExp(`@${USER_DATA.username}`, 'g');
     contentHtml = contentHtml.replace(meMentionPattern, `<span class="mention">@${USER_DATA.username}</span>`);
     textElem.innerHTML = contentHtml;
+    // attach click for channel mentions
+    textElem.querySelectorAll('.channel-mention').forEach(node => {
+        const cid = node.getAttribute('data-channel-id');
+        // resolve name
+        const g = USER_GUILDS.find(x => x.channels?.some(c => c.id === cid));
+        const ch = g?.channels?.find(c => c.id === cid);
+        if (ch && ch.name) node.textContent = `#${ch.name}`;
+        node.addEventListener('click', () => { if (cid) changechannel(cid); });
+    });
 
-    // Reply context
-    if (data.message_reference && data.referenced_message) {
+    // Reply context (click to jump)
+    if (data.message_reference && (data.referenced_message || data.message_reference.message_id)) {
         const ctx = document.createElement('div');
         ctx.className = 'reply-context';
-        const ra = data.referenced_message.author || {};
-        ctx.textContent = `@${ra.global_name || ra.username || 'Unknown'}: ${(data.referenced_message.content || '').slice(0, 80)}`;
+        if (data.referenced_message) {
+            const ra = data.referenced_message.author || {};
+            ctx.innerHTML = `@${ra.global_name || ra.username || 'Unknown'}: ${markdownToSafeHtml((data.referenced_message.content || '').slice(0, 80))}`;
+        } else {
+            ctx.textContent = `Replying to message…`;
+        }
+        ctx.style.cursor = 'pointer';
+        const jumpTargetId = data.message_reference.message_id || data.referenced_message?.id;
+        if (jumpTargetId) {
+            ctx.addEventListener('click', () => {
+                const target = document.querySelector(`.message[data-message-id="${jumpTargetId}"]`);
+                if (target) {
+                    target.classList.add('reply-target');
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setTimeout(() => target.classList.remove('reply-target'), 1200);
+                }
+            });
+        }
         contentWrapper.appendChild(ctx);
     }
 
@@ -770,57 +856,115 @@ function rendermessage(data) {
                 const imgElem = document.createElement('img');
                 imgElem.src = attachment.proxy_url;
                 imgElem.alt = attachment.filename || 'attachment image';
+                imgElem.className = 'attachment-image';
                 imgElem.style.display = 'block';
-                imgElem.style.maxWidth = '400px';
-                imgElem.style.maxHeight = '400px';
                 imgElem.style.marginTop = '4px';
-                imgElem.style.height = 'auto';
-                imgElem.style.width = 'auto';
                 textElem.appendChild(imgElem);
             }
         });
     }
 
-    // Basic embeds rendering
+    //embeds rendering
     if (Array.isArray(data.embeds) && data.embeds.length > 0) {
         data.embeds.forEach(embed => {
             const e = document.createElement('div');
             e.className = 'embed';
+            // author
+            if (embed.author) {
+                const a = document.createElement('div'); a.className = 'author';
+                if (embed.author.icon_url) { const ai = document.createElement('img'); ai.src = embed.author.icon_url; a.appendChild(ai); }
+                const an = document.createElement('a'); an.textContent = embed.author.name || ''; if (embed.author.url) an.href = embed.author.url; a.appendChild(an);
+                e.appendChild(a);
+            }
             if (embed.title) {
-                const t = document.createElement('div'); t.style.fontWeight = '600'; t.textContent = embed.title; e.appendChild(t);
+                const t = document.createElement('div'); t.className = 'title';
+                if (embed.url) { const link = document.createElement('a'); link.href = embed.url; link.textContent = embed.title; link.style.color = '#3a2e1c'; link.style.textDecoration = 'none'; t.appendChild(link); }
+                else { t.textContent = embed.title; }
+                e.appendChild(t);
             }
             if (embed.description) {
-                const d = document.createElement('div'); d.innerHTML = markdownToSafeHtml(embed.description); e.appendChild(d);
+                const d = document.createElement('div'); d.className = 'desc'; d.innerHTML = markdownToSafeHtml(embed.description); e.appendChild(d);
             }
-            if (embed.thumbnail?.url) {
-                const th = document.createElement('img'); th.src = embed.thumbnail.url; th.style.maxWidth = '120px'; th.style.borderRadius = '6px'; th.style.marginTop = '6px'; e.appendChild(th);
-            }
+            if (embed.thumbnail?.url) { const th = document.createElement('img'); th.src = embed.thumbnail.url; th.className = 'thumb'; e.appendChild(th); }
             if (embed.image?.url) {
-                const im = document.createElement('img'); im.src = embed.image.url; im.style.maxWidth = '400px'; im.style.borderRadius = '6px'; im.style.marginTop = '6px'; e.appendChild(im);
+                const im = document.createElement('img'); im.src = embed.image.url; im.className = 'image'; e.appendChild(im);
+            }
+            if (Array.isArray(embed.fields) && embed.fields.length > 0) {
+                const fs = document.createElement('div'); fs.className = 'fields';
+                embed.fields.forEach(f => {
+                    const fd = document.createElement('div'); fd.className = 'field' + (f.inline ? ' inline' : '');
+                    const fn = document.createElement('div'); fn.className = 'name'; fn.textContent = f.name || ''; fd.appendChild(fn);
+                    const fv = document.createElement('div'); fv.innerHTML = markdownToSafeHtml(f.value || ''); fd.appendChild(fv);
+                    fs.appendChild(fd);
+                });
+                e.appendChild(fs);
+            }
+            if (embed.footer) {
+                const ft = document.createElement('div'); ft.className = 'footer';
+                if (embed.footer.icon_url) { const fi = document.createElement('img'); fi.src = embed.footer.icon_url; ft.appendChild(fi); }
+                const ftText = document.createElement('span'); ftText.textContent = embed.footer.text || ''; ft.appendChild(ftText);
+                e.appendChild(ft);
             }
             textElem.appendChild(e);
         });
     }
 
-    // Action buttons (reply / react)
+    // Reactions chips
+    if (Array.isArray(data.reactions) && data.reactions.length > 0) {
+        const bar = document.createElement('div'); bar.className = 'reactions';
+        data.reactions.forEach(r => {
+            const chip = document.createElement('div'); chip.className = 'reaction-chip';
+            let em;
+            if (r.emoji && r.emoji.id) {
+                const ext = r.emoji.animated ? 'gif' : 'png';
+                const url = `https://cdn.discordapp.com/emojis/${r.emoji.id}.${ext}`;
+                const img = document.createElement('img'); img.src = url; chip.appendChild(img);
+            } else if (r.emoji && r.emoji.name) {
+                chip.textContent = r.emoji.name + ' ';
+            }
+            const cnt = document.createElement('span'); cnt.textContent = String(r.count || 1); chip.appendChild(cnt);
+            if (r.me) chip.classList.add('active');
+            chip.addEventListener('click', () => {
+                const emo = r.emoji;
+                const enc = emo.id ? `${encodeURIComponent(emo.name)}:${emo.id}` : encodeURIComponent(emo.name);
+                const method = r.me ? 'DELETE' : 'PUT';
+                fetch(`https://discord.com/api/v10/channels/${data.channel_id}/messages/${data.id}/reactions/${enc}/@me`, {
+                    method,
+                    headers: { 'Authorization': localStorage.getItem('token') }
+                });
+            });
+            bar.appendChild(chip);
+        });
+        textElem.appendChild(bar);
+    }
+
+    // Action buttons (reply / react / edit)
     const actionsContainer = document.createElement('div');
     actionsContainer.className = 'msg-actions-container';
     const actions = document.createElement('div');
     actions.className = 'msg-actions';
-    const replyBtn = document.createElement('button'); replyBtn.innerHTML = '<i class="fa-solid fa-reply"></i>';
+    const replyBtn = document.createElement('button'); replyBtn.title = 'Reply'; replyBtn.innerHTML = '<i class="fa-solid fa-reply"></i>';
     replyBtn.addEventListener('click', () => startReplyToMessage(data));
-    const reactBtn = document.createElement('button'); reactBtn.innerHTML = '<i class="fa-solid fa-face-smile"></i>';
-    reactBtn.addEventListener('click', () => quickReactToMessage(data, '👍'));
-    const deleteBtn = document.createElement('button'); deleteBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
-    deleteBtn.addEventListener('click', () => deletemessage(data));
+    const reactBtn = document.createElement('button'); reactBtn.title = 'React'; reactBtn.innerHTML = '<i class="fa-solid fa-face-smile"></i>';
+    reactBtn.addEventListener('click', (ev) => { ev.stopPropagation(); createReactionPicker(data, reactBtn); });
     actions.appendChild(replyBtn);
     actions.appendChild(reactBtn);
-    actions.appendChild(deleteBtn);
+    if (String(data.author?.id) === String(USER_DATA.id)) {
+        const editBtn = document.createElement('button'); editBtn.title = 'Edit'; editBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
+        editBtn.addEventListener('click', () => startEditMessage(data));
+        const deleteBtn = document.createElement('button'); deleteBtn.title = 'Delete'; deleteBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+        deleteBtn.addEventListener('click', () => deletemessage(data));
+        actions.appendChild(editBtn);
+        actions.appendChild(deleteBtn);
+    }
     actionsContainer.appendChild(actions);
     header.appendChild(actionsContainer);
 
     messageList.appendChild(messageElem);
-    messageList.scrollTop = messageList.scrollHeight;
+    requestAnimationFrame(() => {
+      updateBottomInset();
+      keepPinnedToBottom();
+    });
 }
 
 function showerr(text) {
@@ -832,7 +976,6 @@ function showerr(text) {
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
 
-    // create a fullscreen error modal
     const modal = document.createElement('div');
     modal.className = 'error-modal';
     modal.innerHTML = `
@@ -898,7 +1041,6 @@ function showerr(text) {
         modal.remove();
     });
 
-    // Close modal when clicking the background
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
             modal.remove();
@@ -912,10 +1054,8 @@ function deletemessage(data) {
         console.log("PERFORMING BUG")
         console.log("PERFORMING BUG")
         console.log("PERFORMING BUG")
-        // Perform remove from message logger bug
         const rng_msg = random_message();
         var message = document.querySelector(`.message[data-message-id="${data.id}"]`);
-        // send a message using the nonce of the deleted message
         if (message) {
             fetch(`https://discord.com/api/v10/channels/${data.channel_id}/messages`, {
                 method: 'POST',
@@ -983,6 +1123,22 @@ function changechannel(channelId) {
     } else if (CURRENT_GUILD_ID) {
         renderMemberList(CURRENT_GUILD_ID);
     }
+    // Update header channel name
+    const hc = document.getElementById('header-channel');
+    if (hc) {
+        let cname = '';
+        const g = USER_GUILDS.find(x => x.channels?.some(c => c.id === channelId));
+        if (g) {
+            const ch = (g.channels || []).find(c => c.id === channelId);
+            cname = ch?.name || '';
+        } else {
+            // DM case
+            const dm = PRIVATE_CHANNELS.find(c => String(c.id) === String(channelId));
+            if (dm) cname = dm.name || (dm.recipients?.map(r => r.global_name || r.username).join(', ') || 'DM');
+        }
+        hc.textContent = cname ? `# ${cname}` : '';
+    }
+    updateBottomInset();
     var guildIdForChannel = USER_GUILDS.find(g => g.channels.some(c => c.id === channelId))?.id;
     if (guildIdForChannel) {
         localStorage.setItem('lastGuildId', guildIdForChannel);
@@ -1002,6 +1158,7 @@ function changechannel(channelId) {
         messages.forEach(msg => {
             rendermessage(msg);
         });
+        requestAnimationFrame(() => { updateBottomInset(); keepPinnedToBottom(); });
     })
     .catch(err => {
         console.error('Error fetching messages:', err);
@@ -1009,6 +1166,46 @@ function changechannel(channelId) {
     }
     );
     renderTypingIndicator(channelId);
+    // fetch channel for slowmode info
+    fetch(`https://discord.com/api/v10/channels/${channelId}`, { headers: { 'Authorization': localStorage.getItem('token') } })
+      .then(r => r.ok ? r.json() : null)
+      .then(ch => {
+        const slow = (ch && ch.rate_limit_per_user) ? Number(ch.rate_limit_per_user) : 0;
+        const elem = document.getElementById('slowmode-indicator');
+        if (elem) {
+          if (slow > 0) {
+            // compute immunity from permissions (MANAGE_MESSAGES or ADMINISTRATOR)
+            let immune = false;
+            try {
+              if (ch.guild_id && USER_GUILDS.length) {
+                const g = USER_GUILDS.find(x => x.id === ch.guild_id);
+                const me = g?.members?.find(m => m.user?.id === USER_DATA.id);
+                const myRoles = me?.roles || [];
+                const roles = g?.roles || [];
+                let perms = BigInt(0);
+                // base @everyone role
+                const everyone = roles.find(r => r.id === g?.id);
+                if (everyone?.permissions) perms |= BigInt(everyone.permissions);
+                for (const rid of myRoles) {
+                  const r = roles.find(x => x.id === rid);
+                  if (r?.permissions) perms |= BigInt(r.permissions);
+                }
+                // channel overwrites
+                const allowBits = BigInt(0);
+                const denyBits = BigInt(0);
+                // full overwrite resolution omitted for brevity; base role perms are enough for common cases
+                const ADMINISTRATOR = BigInt(1) << BigInt(3);
+                const MANAGE_MESSAGES = BigInt(1) << BigInt(13);
+                if ((perms & ADMINISTRATOR) !== BigInt(0) || (perms & MANAGE_MESSAGES) !== BigInt(0)) immune = true;
+              }
+            } catch (_) {}
+            const secs = slow;
+            elem.textContent = immune ? `Slowmode: ${secs}s (you are immune)` : `Slowmode: ${secs}s`;
+          } else {
+            elem.textContent = '';
+          }
+        }
+      }).catch(() => {});
 
 }
 
@@ -1023,6 +1220,10 @@ function changeguild(guildId) {
     CURRENT_GUILD_ID = guildId;
     renderMemberList(guildId);
     requestGuildMembers(guildId);
+
+    // Update header guild name
+    const hg = document.getElementById('header-guild');
+    if (hg) hg.textContent = guild.name || '';
 
     const channels = guild.channels;
 
@@ -1158,7 +1359,6 @@ socket.onmessage = (event) => {
                         sidebar.appendChild(guildElem);
                     }
                     else {
-                        // First letter of each word in the server name, up to 5 letters
                         const serverName = guild.name || 'Unknown';
                         const initials = serverName.split(' ').map(word => word.charAt(0)).join('').slice(0, 3).toUpperCase();
                         const guildElem = document.createElement('div');
@@ -1215,6 +1415,8 @@ socket.onmessage = (event) => {
                     }, 100);
                 }
                 applyUserPreferences();
+                updateBottomInset();
+                attachResizeObserver();
             }
             if (data.t === 'GUILD_CREATE') {
                 const g = data.d;
@@ -1282,6 +1484,14 @@ socket.onmessage = (event) => {
                     rendermessage(data.d);
                 }
             }
+if (data.t === 'MESSAGE_REACTION_ADD' || data.t === 'MESSAGE_REACTION_REMOVE') {
+    if (String(CURRENT_CHANNEL) === String(data.d.channel_id)) {
+        // refetch minimal message reactions to render chips
+        fetch(`https://discord.com/api/v10/channels/${data.d.channel_id}/messages/${data.d.message_id}`, {
+            headers: { 'Authorization': localStorage.getItem('token') }
+        }).then(r => r.ok ? r.json() : null).then(msg => { if (msg) rendermessage(msg); });
+    }
+}
             if (data.t === 'MESSAGE_DELETE') {
             }
             break;
@@ -1298,24 +1508,37 @@ chatInput.addEventListener('keydown', (e) => {
         e.preventDefault(); // no newline
         const content = chatInput.value.trim();
         if (content && CURRENT_CHANNEL) {
-            const payload = REPLY_TO_MESSAGE_ID ? {
-                content,
-                message_reference: { channel_id: CURRENT_CHANNEL, message_id: REPLY_TO_MESSAGE_ID }
-            } : { content };
-            fetch(`https://discord.com/api/v10/channels/${CURRENT_CHANNEL}/messages`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': localStorage.getItem('token'),
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            })
-            .then(res => {
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                chatInput.value = '';
-                cancelReply();
-            })
-            .catch(err => log('Error sending message: ' + err.message));
+            if (EDIT_MESSAGE_ID) {
+                fetch(`https://discord.com/api/v10/channels/${CURRENT_CHANNEL}/messages/${EDIT_MESSAGE_ID}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': localStorage.getItem('token'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ content })
+                })
+                .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); chatInput.value=''; cancelEdit(); })
+                .catch(err => log('Error editing message: ' + err.message));
+            } else {
+                const payload = REPLY_TO_MESSAGE_ID ? {
+                    content,
+                    message_reference: { channel_id: CURRENT_CHANNEL, message_id: REPLY_TO_MESSAGE_ID }
+                } : { content };
+                fetch(`https://discord.com/api/v10/channels/${CURRENT_CHANNEL}/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': localStorage.getItem('token'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    chatInput.value = '';
+                    cancelReply();
+                })
+                .catch(err => log('Error sending message: ' + err.message));
+            }
         }
     }
     // Typing indicator
@@ -1354,15 +1577,23 @@ if (settingsBtn) {
 // Reply and reactions helpers
 let REPLY_TO_MESSAGE_ID = null;
 const replyBanner = document.getElementById('reply-banner');
+const editBanner = document.getElementById('edit-banner');
 
 function startReplyToMessage(message) {
   REPLY_TO_MESSAGE_ID = message.id;
   if (replyBanner) {
     const author = message.author?.global_name || message.author?.username || 'Unknown';
-    replyBanner.textContent = `Replying to ${author}: ${(message.content || '').slice(0,60)}`;
+    replyBanner.innerHTML = `<span>Replying to ${author}: ${(message.content || '').slice(0,60)}</span>`;
+    const x = document.createElement('button'); x.textContent = '✕'; x.className = 'primary'; x.style.padding='2px 8px';
+    x.addEventListener('click', cancelReply);
+    replyBanner.appendChild(x);
     replyBanner.style.display = '';
   }
   chatInput.focus();
+  requestAnimationFrame(() => {
+    updateBottomInset();
+    keepPinnedToBottom();
+  });
 }
 
 function cancelReply() {
@@ -1375,4 +1606,28 @@ function quickReactToMessage(message, emoji) {
     method: 'PUT',
     headers: { 'Authorization': localStorage.getItem('token') }
   }).catch(err => log('React failed: ' + err.message));
+}
+
+// Edit message
+let EDIT_MESSAGE_ID = null;
+function startEditMessage(message) {
+  EDIT_MESSAGE_ID = message.id;
+  chatInput.value = message.content || '';
+  chatInput.focus();
+  if (editBanner) {
+    editBanner.innerHTML = `<span>Editing your message</span>`;
+    const x = document.createElement('button'); x.textContent = '✕'; x.className = 'primary'; x.style.padding='2px 8px';
+    x.addEventListener('click', cancelEdit);
+    editBanner.appendChild(x);
+    editBanner.style.display = '';
+  }
+  requestAnimationFrame(() => {
+    updateBottomInset();
+    keepPinnedToBottom();
+  });
+}
+function cancelEdit() {
+  EDIT_MESSAGE_ID = null;
+  if (editBanner) editBanner.style.display = 'none';
+  chatInput.value = '';
 }

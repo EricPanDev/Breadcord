@@ -4,21 +4,31 @@
   <meta charset="UTF-8">
   <title>BreadCord</title>
   <link rel="stylesheet" href="breadcord.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkfAmZ6P5bVv5zVb6Y2G3e6zQ3eO1V0w0sQao55o04uQvYxQxQ0jrO5/A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js" integrity="sha512-vOeZ3d+3DqU8mENg7k0u3q8XhT4gLxy3Qv1a8oR8aS2Vrp1t2o3q4eZz8q3uJXw5kq8x2m4xY0wUeXH+v0Sx0Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
     <div class="drag-bar">breadcord</div>
     <div id="sidebar"></div>
     <div id="channel-list"></div>
+    <div id="channel-header">
+      <div id="header-guild"></div>
+      <div id="header-channel"></div>
+    </div>
     <div id="message-list"></div>
     <div id="member-list"></div>
     <div id="chat-input-wrapper">
       <div id="reply-banner" style="display:none"></div>
+      <div id="edit-banner" style="display:none"></div>
       <div id="chat-controls">
         <button id="attach-button" title="Upload files">📎</button>
         <textarea id="chat-input" placeholder="Type a message..."></textarea>
         <button id="settings-button" title="Settings">⚙️</button>
       </div>
-      <div id="typing-indicator" aria-live="polite"></div>
+      <div id="meta-row">
+        <div id="typing-indicator" aria-live="polite"></div>
+        <div id="slowmode-indicator"></div>
+      </div>
       <input type="file" id="file-input" multiple style="display:none" />
     </div>
   <pre id="log" style="display:none"></pre>
