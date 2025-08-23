@@ -22,6 +22,6 @@ Breadcord is a lightweight, bread themed Discord client with a easy to use plugi
 
 | OS      | amd64 | arm64 |
 |---------|-------|-------|
-| Windows | [Download](https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-windows-amd64.zip) | [Download](https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-windows-arm64.zip) |
-| macOS   | [Download](https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-macos-amd64.zip)   | [Download](https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-macos-arm64.zip)   |
-| Linux   | [Download](https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-linux-amd64.zip)   | [Download](https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-linux-arm64.zip)   |
+| Windows | [exe](https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-windows-amd64.exe) | [exe](https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-windows-arm64.exe) |
+| macOS   | [dmg](https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-macos-amd64.dmg)   | [dmg](https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-macos-arm64.dmg)   |
+| Linux   | [AppImage](https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-linux-amd64.AppImage) [deb](https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-linux-amd64.deb)   | [AppImage](https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-linux-arm64.AppImage) [deb](https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-linux-arm64.deb)

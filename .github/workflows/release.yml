@@ -1,0 +1,148 @@
+name: Build & Release (latest)
+
+on:
+  push:
+    branches: [ dev ]
+
+permissions:
+  contents: write
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+jobs:
+  # ---------- Windows ----------
+  windows:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ x64, arm64 ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build (Windows ${{ matrix.arch }})
+        run: npx electron-builder --win nsis --${{ matrix.arch }}
+
+      - name: Prepare upload filenames
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist\upload | Out-Null
+          # electron-builder produced something like: Breadcord-win-x64.exe
+          # We want: Breadcord-windows-amd64.exe / Breadcord-windows-arm64.exe
+          $archOut = if ("${{ matrix.arch }}" -eq "x64") { "amd64" } else { "arm64" }
+          Get-ChildItem dist\*.exe | ForEach-Object {
+            Copy-Item $_.FullName "dist\upload\Breadcord-windows-$archOut.exe"
+          }
+
+      - name: Create/Update Release & Upload
+        uses: softprops/action-gh-release@v2
+        with:
+          # create a fresh release per push so /releases/latest points here
+          tag_name: "build-${{ github.run_id }}"
+          name: "Continuous Build ${{ github.run_number }}"
+          make_latest: true
+          draft: false
+          prerelease: false
+          files: |
+            dist/upload/Breadcord-windows-*.exe
+
+  # ---------- macOS ----------
+  macos:
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ x64, arm64 ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build (macOS ${{ matrix.arch }})
+        run: npx electron-builder --mac dmg --${{ matrix.arch }}
+
+      - name: Prepare upload filenames
+        run: |
+          mkdir -p dist/upload
+          # electron-builder produced: Breadcord-mac-x64.dmg or Breadcord-mac-arm64.dmg
+          # We want: Breadcord-macos-amd64.dmg / Breadcord-macos-arm64.dmg
+          if [ "${{ matrix.arch }}" = "x64" ]; then ARCH_OUT="amd64"; else ARCH_OUT="arm64"; fi
+          for f in dist/*.dmg; do
+            cp "$f" "dist/upload/Breadcord-macos-$ARCH_OUT.dmg"
+          done
+
+      - name: Create/Update Release & Upload
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "build-${{ github.run_id }}"
+          name: "Continuous Build ${{ github.run_number }}"
+          make_latest: true
+          draft: false
+          prerelease: false
+          files: |
+            dist/upload/Breadcord-macos-*.dmg
+
+  # ---------- Linux ----------
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ x64, arm64 ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Enable cross-compile deps (for arm64)
+        run: |
+          sudo dpkg --add-architecture arm64
+          sudo apt-get update
+          # Tools that electron-builder / fpm may use:
+          sudo apt-get install -y rpm fakeroot dpkg dpkg-dev
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build (Linux ${{ matrix.arch }})
+        # AppImage/DEB/zip (from build.linux.targets)
+        run: npx electron-builder --linux AppImage deb zip --${{ matrix.arch }}
+
+      - name: Prepare upload filenames
+        run: |
+          mkdir -p dist/upload
+          # electron-builder names: Breadcord-linux-x64.AppImage, .deb, .zip
+          # We want amd64 instead of x64
+          if [ "${{ matrix.arch }}" = "x64" ]; then ARCH_OUT="amd64"; else ARCH_OUT="arm64"; fi
+          for f in dist/*.AppImage; do cp "$f" "dist/upload/Breadcord-linux-$ARCH_OUT.AppImage"; done
+          for f in dist/*.deb; do cp "$f" "dist/upload/Breadcord-linux-$ARCH_OUT.deb"; done
+          for f in dist/*.zip; do cp "$f" "dist/upload/Breadcord-linux-$ARCH_OUT.zip"; done
+
+      - name: Create/Update Release & Upload
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "build-${{ github.run_id }}"
+          name: "Continuous Build ${{ github.run_number }}"
+          make_latest: true
+          draft: false
+          prerelease: false
+          files: |
+            dist/upload/Breadcord-linux-*.AppImage
+            dist/upload/Breadcord-linux-*.deb
+            dist/upload/Breadcord-linux-*.zip
