@@ -21,6 +21,11 @@
   },
   "build": {
     "appId": "com.breadcord.app",
+    "productName": "Breadcord",
+    "directories": {
+      "buildResources": "icon",
+      "output": "dist"
+    },
     "files": [
       "index.js",
       "preload.js",
@@ -30,9 +35,20 @@
     ],
     "artifactName": "${productName}-${os}-${arch}.${ext}",
     "asar": true,
-    "mac": { "icon": "icon/icon.icns", "target": ["dmg","zip"] },
-    "win": { "icon": "icon/icon.ico", "target": ["nsis"] },
-    "linux": { "icon": "icon/icon.png", "target": ["AppImage","deb"] }
+    "mac": {
+      "icon": "icon.icns",
+      "target": ["dmg", "zip"],
+      "category": "public.app-category.social-networking"
+    },
+    "win": {
+      "icon": "icon.ico",
+      "target": ["nsis"]
+    },
+    "linux": {
+      "icon": "icon.png",
+      "target": ["AppImage", "deb"],
+      "category": "Network"
+    }
   },
   "repository": {
     "type": "git",
