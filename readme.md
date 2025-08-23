@@ -18,7 +18,10 @@ Breadcord is a lightweight, bread themed Discord client with a easy to use plugi
 
 # Automatic Builds
 > [!WARNING]  
-> **Windows** - These builds are not signed with a paid certificate, so they may trigger SmartScreen. This is safe to ignore.<br>**MacOS** - These builds are not signed or notarized by Apple, you will likely need to open the app via the right click menu or approve it in System Preferences. 
+> **Windows** - These builds are not signed with a paid certificate, so they may trigger SmartScreen. This is safe to ignore.<br>**MacOS** - You will need to approve the app in settings or it will show as "Damaged"
+
+> [!NOTE]
+> **MacOS** - I **highly** recommend using this to automatically install - it also fixes the app showing as "damaged". Open terminal and paste in `curl -fsSL https://raw.githubusercontent.com/EricPanDev/Breadcord/refs/heads/dev/docs/macos_setup.sh | bash` and Breadcord will be installed to your Applications folder.
 
 | OS      | amd64 | arm64 |
 |---------|-------|-------|
