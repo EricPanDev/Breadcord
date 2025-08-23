@@ -57,7 +57,7 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            dist/upload/Breadcord-windows-*.exe
+            app/dist/upload/Breadcord-windows-*.exe
 
   # ---------- macOS ----------
   macos:
@@ -98,7 +98,7 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            dist/upload/Breadcord-macos-*.dmg
+            app/dist/upload/Breadcord-macos-*.dmg
 
   # ---------- Linux ----------
   linux:
@@ -147,6 +147,6 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            dist/upload/Breadcord-linux-*.AppImage
-            dist/upload/Breadcord-linux-*.deb
-            dist/upload/Breadcord-linux-*.zip
+            app/dist/upload/Breadcord-linux-*.AppImage
+            app/dist/upload/Breadcord-linux-*.deb
+            app/dist/upload/Breadcord-linux-*.zip
