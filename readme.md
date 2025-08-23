@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="https://github.com/EricPanDev/Breadcord/actions">
-    <img src="https://img.shields.io/github/actions/workflow/status/EricPanDev/Breadcord/ci.yml?branch=main&logo=github&label=Build&logo=bitrise&style=for-the-badge" alt="Build Status">
+    <img src="https://img.shields.io/github/actions/workflow/status/EricPanDev/Breadcord/release.yml?branch=dev&logo=github&label=Build&logo=bitrise&style=for-the-badge" alt="Build Status">
   </a>
   <a href="https://github.com/EricPanDev/Breadcord/releases">
     <img src="https://img.shields.io/github/v/release/EricPanDev/Breadcord?logo=github&label=Release&style=for-the-badge" alt="Latest Release">
