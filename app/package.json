@@ -23,7 +23,6 @@
     "appId": "com.breadcord.app",
     "productName": "Breadcord",
     "directories": {
-      "buildResources": "icon",
       "output": "dist"
     },
     "files": [
@@ -31,21 +30,22 @@
       "preload.js",
       "tokenStore.js",
       "src/**/*",
-      "package.json"
+      "package.json",
+      "icon/**/*"
     ],
     "artifactName": "${productName}-${os}-${arch}.${ext}",
     "asar": true,
     "mac": {
-      "icon": "icon.icns",
-      "target": ["dmg", "zip"],
+      "icon": "icon/icon.icns",
+      "target": ["dmg"],
       "category": "public.app-category.social-networking"
     },
     "win": {
-      "icon": "icon.ico",
+      "icon": "icon/icon.ico",
       "target": ["nsis"]
     },
     "linux": {
-      "icon": "icon.png",
+      "icon": "icon/icon.png",
       "target": ["AppImage", "deb"],
       "category": "Network"
     }
