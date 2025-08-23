@@ -116,8 +116,8 @@ jobs:
 
       - name: Enable cross-compile deps (for arm64)
         run: |
-          sudo dpkg --add-architecture arm64
           sudo apt-get update
+          sudo dpkg --add-architecture arm64
           # Tools that electron-builder / fpm may use:
           sudo apt-get install -y rpm fakeroot dpkg dpkg-dev
 
