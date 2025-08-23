@@ -33,5 +33,9 @@
     "mac": { "icon": "icon/icon.icns", "target": ["dmg","zip"] },
     "win": { "icon": "icon/icon.ico", "target": ["nsis"] },
     "linux": { "icon": "icon/icon.png", "target": ["AppImage","deb"] }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ericpandev/Breadcord.git"
   }
 }
