@@ -18,8 +18,7 @@ Breadcord is a lightweight, bread themed Discord client with a easy to use plugi
 
 # Automatic Builds
 > [!WARNING]  
-> Windows - These builds are not signed with a paid certificate, so they may trigger SmartScreen. This is safe to ignore.
-> MacOS - These builds are not signed or notarized by Apple, you will likely need to open the app via the right click menu or approve it in System Preferences. 
+> **Windows** - These builds are not signed with a paid certificate, so they may trigger SmartScreen. This is safe to ignore.<br>**MacOS** - These builds are not signed or notarized by Apple, you will likely need to open the app via the right click menu or approve it in System Preferences. 
 
 | OS      | amd64 | arm64 |
 |---------|-------|-------|
