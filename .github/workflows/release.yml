@@ -1,5 +1,9 @@
 name: Build & Release (latest)
 
+defaults:
+  run:
+    working-directory: app
+
 on:
   push:
     branches: [ dev ]
