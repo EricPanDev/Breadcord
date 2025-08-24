@@ -45,11 +45,13 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Add/remove background blur effect
         if (scrollTop > 50) {
-            navbar.style.backdropFilter = 'blur(10px)';
-            navbar.style.backgroundColor = 'rgba(139, 69, 19, 0.95)';
+            navbar.style.background = 'rgba(255, 255, 255, 0.95)';
+            navbar.style.backdropFilter = 'blur(20px) saturate(180%)';
+            navbar.style.borderBottom = '1px solid rgba(0, 0, 0, 0.1)';
         } else {
-            navbar.style.backdropFilter = 'none';
-            navbar.style.backgroundColor = '';
+            navbar.style.background = 'rgba(255, 255, 255, 0.8)';
+            navbar.style.backdropFilter = 'blur(20px) saturate(180%)';
+            navbar.style.borderBottom = '1px solid rgba(0, 0, 0, 0.05)';
         }
 
         lastScrollTop = scrollTop;
