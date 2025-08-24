@@ -17,7 +17,8 @@
   },
   "dependencies": {
     "electron-window-state": "^5.0.3",
-    "keytar": "^7.9.0"
+    "keytar": "^7.9.0",
+    "ws": "^8.18.3"
   },
   "build": {
     "appId": "com.breadcord.app",
@@ -37,16 +38,23 @@
     "asar": true,
     "mac": {
       "icon": "icon/icon.icns",
-      "target": ["dmg"],
+      "target": [
+        "dmg"
+      ],
       "category": "public.app-category.social-networking"
     },
     "win": {
       "icon": "icon/icon.ico",
-      "target": ["nsis"]
+      "target": [
+        "nsis"
+      ]
     },
     "linux": {
       "icon": "icon/icon.png",
-      "target": ["AppImage", "deb"],
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "category": "Network"
     }
   },

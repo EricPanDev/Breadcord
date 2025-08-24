@@ -63,6 +63,19 @@ const ready = new Promise(r => (_resolveReady = r));
 queueMicrotask(() => _resolveReady());
 
 // ------- BreadAPI class & facade -------
+const { EventEmitter } = require('events');
+function createEmitter() {
+  const ee = new EventEmitter();
+  return {
+    on(event, fn) {            // Persistent subscription
+      ee.on(event, fn);
+      return () => ee.off(event, fn); // Return an explicit unsubscribe function
+    },
+    off(event, fn) { ee.off(event, fn); },
+    emit(event, ...args) { ee.emit(event, ...args); },
+  };
+}
+
 class BreadAPIClass {
   static version = "1.0.0";
 
@@ -79,7 +92,31 @@ class BreadAPIClass {
   static on(...a) { return this._em.on(...a); }
   static off(...a) { return this._em.off(...a); }
   static emit(...a) { return this._em.emit(...a); }
+
+  // --- gateway sub-API ---
+  static _gatewayEm = createEmitter();
+  static gateway = {
+    // ✅ Persistent: fires for every message until you call the returned unsubscribe
+    on_message(fn) {
+      return BreadAPIClass._gatewayEm.on('message', fn);
+    },
+    off_message(fn) {
+      BreadAPIClass._gatewayEm.off('message', fn);
+    },
+    // Optional one-time helper (does not affect on_message behavior)
+    once_message(fn) {
+      const off = BreadAPIClass._gatewayEm.on('message', function handler(p) {
+        off(); fn(p);
+      });
+      return off;
+    },
+  };
 }
+
+// bridge IPC -> gateway emitter
+ipcRenderer.on('discord-gateway-message', (_event, payload) => {
+  BreadAPIClass._gatewayEm.emit('message', payload);
+});
 
 const BreadAPI = Object.freeze({
   version: BreadAPIClass.version,
@@ -89,6 +126,11 @@ const BreadAPI = Object.freeze({
   off: BreadAPIClass.off.bind(BreadAPIClass),
   emit: BreadAPIClass.emit.bind(BreadAPIClass),
   ready,
+  gateway: Object.freeze({
+    on_message: BreadAPIClass.gateway.on_message,
+    off_message: BreadAPIClass.gateway.off_message,
+    once_message: BreadAPIClass.gateway.once_message,
+  }),
 });
 
 contextBridge.exposeInMainWorld('BreadAPI', BreadAPI);

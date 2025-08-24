@@ -22,7 +22,8 @@ async function save_token(token) {
 
 async function load_token() {
   const token = await keytar.getPassword(SERVICE, ACCOUNT);
-  return token || null;
+  if (!token) return null;
+  return token.replace(/^"(.*)"$/, "$1");
 }
 
 async function delete_token() {

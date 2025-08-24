@@ -1,6 +1,7 @@
-const { app, BrowserWindow, screen, ipcMain } = require('electron');
+const { app, BrowserWindow, screen, ipcMain, ipcRenderer } = require('electron');
 const path = require('path');
 const windowStateKeeper = require('electron-window-state');
+const WebSocket = require('ws');
 
 const {
   initTokenStore,
@@ -9,6 +10,164 @@ const {
 } = require('./tokenStore');
 
 let mainWin;
+
+function handle_ws(token) {
+  const GATEWAY_URL = 'wss://gateway.discord.gg/?v=10&encoding=json';
+
+  let ws;
+  let seq = null;
+  let heartbeatTimer = null;
+  let heartbeatIntervalMs = null;
+  let lastHeartbeatSentAt = null;
+
+  // Optional: keep the process from whining about unhandled rejections
+  process.on('unhandledRejection', (err) => {
+    console.error('[unhandledRejection]', err);
+  });
+
+  connect();
+
+  function connect() {
+    cleanup(); // <-- now defined
+
+    ws = new WebSocket(GATEWAY_URL);
+
+    ws.on('open', () => log('ws open'));
+
+    ws.on('message', (buf) => {
+      let pkt;
+      try { pkt = JSON.parse(buf.toString()); } catch { return; }
+
+      if (mainWin && !mainWin.isDestroyed()) {
+        mainWin.webContents.send('discord-gateway-message', pkt);
+      }
+
+      if (typeof pkt.s === 'number') seq = pkt.s;
+
+      switch (pkt.op) {
+        case 10: { // HELLO
+          heartbeatIntervalMs = pkt?.d?.heartbeat_interval;
+          log(`HELLO heartbeat_interval=${heartbeatIntervalMs}ms`);
+          startHeartbeats(heartbeatIntervalMs);
+
+          console.log("TOKEN", token);
+
+          send({
+            op: 2,
+            d: {
+              token: token,
+              properties: {
+                os: process.platform,
+                browser: 'breadcord',
+                device: 'breadcord',
+              }
+            },
+          });
+          log('IDENTIFY sent');
+          break;
+        }
+        case 11: { // HEARTBEAT ACK
+          if (lastHeartbeatSentAt != null) {
+            const ping = Date.now() - lastHeartbeatSentAt;
+            if (mainWin && !mainWin.isDestroyed()) {
+              mainWin.webContents.send('discord-gateway-ping', { pingMs: ping });
+            }
+            log(`HEARTBEAT ACK ping=${ping}ms`);
+          }
+          break;
+        }
+        case 1: // Server requests immediate heartbeat
+          log('Server requested HEARTBEAT now');
+          sendHeartbeat();
+          break;
+        case 7: // RECONNECT
+          log('Server requested RECONNECT');
+          reconnect();
+          break;
+        case 9: // INVALID_SESSION
+          log(`INVALID_SESSION resume=${Boolean(pkt.d)}`);
+          setTimeout(() => reconnect(true), 2500);
+          break;
+        default:
+          break;
+      }
+    });
+
+    ws.on('close', (code, reason) => {
+      log(`ws close code=${code} reason=${reason}`);
+      stopHeartbeats();
+      setTimeout(() => reconnect(), 2000);
+    });
+
+    ws.on('error', (err) => {
+      log(`ws error: ${err?.message || err}`);
+      // 'close' will handle reconnect; make sure we don't throw here
+    });
+  }
+
+  function reconnect(fresh = false) {
+    stopHeartbeats();
+    try { ws?.terminate(); } catch {}
+    if (fresh) seq = null;
+    connect();
+  }
+
+  function startHeartbeats(interval) {
+    stopHeartbeats();
+    if (!interval || !Number.isFinite(interval)) return;
+
+    // Jitter first heartbeat per Discord guidance
+    const firstDelay = Math.floor(Math.random() * interval);
+
+    setTimeout(() => {
+      sendHeartbeat();
+      heartbeatTimer = setInterval(sendHeartbeat, interval);
+      log('Heartbeat interval started');
+    }, firstDelay);
+  }
+
+  function stopHeartbeats() {
+    if (heartbeatTimer) {
+      clearInterval(heartbeatTimer);
+      heartbeatTimer = null;
+      log('Heartbeat interval stopped');
+    }
+  }
+
+  function sendHeartbeat() {
+    lastHeartbeatSentAt = Date.now();
+    log(`Sending HEARTBEAT seq=${seq ?? 'null'}`);
+    send({ op: 1, d: seq ?? null });
+  }
+
+  function send(payload) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(payload));
+    } else {
+      log('send() skipped; socket not open');
+    }
+  }
+
+  // 🔧 This was missing
+  function cleanup() {
+    // Clear any existing heartbeat loop
+    if (heartbeatTimer) {
+      clearInterval(heartbeatTimer);
+      heartbeatTimer = null;
+    }
+    // Tear down any existing socket/listeners
+    if (ws) {
+      try { ws.removeAllListeners(); } catch {}
+      try { ws.terminate(); } catch {}
+      ws = null;
+    }
+  }
+
+  function log(msg) {
+    console.log(`[gateway] ${msg}`);
+  }
+}
+
 
 function createWindow() {
   const mainWindowState = windowStateKeeper({
@@ -56,6 +215,7 @@ function createWindow() {
     const hasToken = !!(token);
     if (hasToken) {
       mainWin.loadFile(path.join(__dirname, 'src', 'index.html'));
+      handle_ws(token);
     }
     else {
       mainWin.loadURL('https://discord.com/login');
@@ -94,6 +254,7 @@ ipcMain.on('token-found', (event, token) => {
       console.log("Token saved, loading main app...");
       if (mainWin) {
         mainWin.loadFile(path.join(__dirname, 'src', 'index.html'));
+        handle_ws(token);
       }
     }).catch(err => {
       console.error("Error saving token:", err);
