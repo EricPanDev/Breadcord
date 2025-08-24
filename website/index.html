@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breadcord - Discord Client, Reimagined</title>
+    <meta name="description" content="Breadcord is a lightweight, bread themed Discord client with an easy to use plugin system.">
+    <link rel="icon" type="image/png" href="assets/images/breadcord-logo.png">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="assets/images/breadcord-logo.png" alt="Breadcord Logo" class="logo">
+                <span class="brand-name">Breadcord</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#home" class="nav-link">Home</a></li>
+                <li><a href="#about" class="nav-link">About</a></li>
+                <li><a href="#download" class="nav-link">Download</a></li>
+                <li><a href="#github" class="nav-link">GitHub</a></li>
+            </ul>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <img src="assets/images/breadcord-logo.png" alt="Breadcord" class="hero-logo">
+                <h1 class="hero-title">Breadcord</h1>
+                <p class="hero-subtitle">Discord Client, Reimagined</p>
+                <p class="hero-description">A lightweight, bread themed Discord client with an easy to use plugin system</p>
+                <div class="hero-buttons">
+                    <a href="#download" class="btn btn-primary">Download Now</a>
+                    <a href="#about" class="btn btn-secondary">Learn More</a>
+                </div>
+            </div>
+            <div class="hero-badges">
+                <img src="https://img.shields.io/github/actions/workflow/status/EricPanDev/Breadcord/release.yml?branch=dev&logo=github&label=Build&logo=bitrise&style=for-the-badge" alt="Build Status">
+                <img src="https://img.shields.io/github/v/release/EricPanDev/Breadcord?logo=github&label=Release&style=for-the-badge" alt="Latest Release">
+                <img src="https://img.shields.io/github/license/EricPanDev/Breadcord?logo=open-source-initiative&logoColor=white&style=for-the-badge" alt="License">
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <h2 class="section-title">About Breadcord</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <p class="about-description">
+                        Breadcord is a lightweight, bread themed Discord client with an easy to use plugin system. 
+                        Originally created as a joke, we've decided to rewrite the client to be actually usable after 
+                        seeing people legitimately wanting to use this client.
+                    </p>
+                    <div class="features">
+                        <div class="feature">
+                            <div class="feature-icon">🍞</div>
+                            <h3>Bread Themed</h3>
+                            <p>Enjoy Discord with a warm, cozy bread-themed interface</p>
+                        </div>
+                        <div class="feature">
+                            <div class="feature-icon">🔌</div>
+                            <h3>Plugin System</h3>
+                            <p>Easy to use plugin system for extending functionality</p>
+                        </div>
+                        <div class="feature">
+                            <div class="feature-icon">⚡</div>
+                            <h3>Lightweight</h3>
+                            <p>Fast and efficient Discord client that doesn't slow you down</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Download Section -->
+    <section id="download" class="download">
+        <div class="container">
+            <h2 class="section-title">Download Breadcord</h2>
+            <div class="download-notice">
+                <div class="notice warning">
+                    <strong>Windows:</strong> These builds are not signed with a paid certificate, so they may trigger SmartScreen. This is safe to ignore.
+                </div>
+                <div class="notice info">
+                    <strong>macOS:</strong> You will need to approve the app in settings or it will show as "Damaged"
+                </div>
+                <div class="notice tip">
+                    <strong>macOS Quick Install:</strong> Run this command in terminal:<br>
+                    <code>curl -fsSL https://raw.githubusercontent.com/EricPanDev/Breadcord/refs/heads/dev/docs/macos_setup.sh | bash</code>
+                </div>
+            </div>
+            
+            <div class="download-grid">
+                <!-- Windows -->
+                <div class="download-card">
+                    <div class="os-icon">🪟</div>
+                    <h3>Windows</h3>
+                    <div class="download-links">
+                        <a href="https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-windows-amd64.exe" class="download-btn">
+                            <span class="arch">amd64</span>
+                            <span class="format">.exe</span>
+                        </a>
+                        <a href="https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-windows-arm64.exe" class="download-btn">
+                            <span class="arch">arm64</span>
+                            <span class="format">.exe</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- macOS -->
+                <div class="download-card">
+                    <div class="os-icon">🍎</div>
+                    <h3>macOS</h3>
+                    <div class="download-links">
+                        <a href="https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-macos-amd64.dmg" class="download-btn">
+                            <span class="arch">Intel</span>
+                            <span class="format">.dmg</span>
+                        </a>
+                        <a href="https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-macos-arm64.dmg" class="download-btn">
+                            <span class="arch">Apple Silicon</span>
+                            <span class="format">.dmg</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Linux -->
+                <div class="download-card">
+                    <div class="os-icon">🐧</div>
+                    <h3>Linux</h3>
+                    <div class="download-links">
+                        <div class="arch-group">
+                            <span class="arch-label">amd64</span>
+                            <a href="https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-linux-amd64.AppImage" class="download-btn">AppImage</a>
+                            <a href="https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-linux-amd64.deb" class="download-btn">deb</a>
+                        </div>
+                        <div class="arch-group">
+                            <span class="arch-label">arm64</span>
+                            <a href="https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-linux-arm64.AppImage" class="download-btn">AppImage</a>
+                            <a href="https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-linux-arm64.deb" class="download-btn">deb</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- GitHub Section -->
+    <section id="github" class="github">
+        <div class="container">
+            <h2 class="section-title">Open Source</h2>
+            <div class="github-content">
+                <div class="github-text">
+                    <p>Breadcord is open source and developed on GitHub. Join our community, contribute to the project, or report issues!</p>
+                    <div class="github-links">
+                        <a href="https://github.com/EricPanDev/Breadcord" class="github-btn" target="_blank">
+                            <span class="github-icon">📁</span>
+                            View Repository
+                        </a>
+                        <a href="https://github.com/EricPanDev/Breadcord/issues" class="github-btn" target="_blank">
+                            <span class="github-icon">🐛</span>
+                            Report Issues
+                        </a>
+                        <a href="https://github.com/EricPanDev/Breadcord/releases" class="github-btn" target="_blank">
+                            <span class="github-icon">🚀</span>
+                            View Releases
+                        </a>
+                        <a href="https://github.com/EricPanDev/Breadcord/actions" class="github-btn" target="_blank">
+                            <span class="github-icon">⚙️</span>
+                            Build Status
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="assets/images/breadcord-logo.png" alt="Breadcord" class="footer-logo">
+                    <span>Breadcord</span>
+                </div>
+                <div class="footer-links">
+                    <a href="https://github.com/EricPanDev/Breadcord" target="_blank">GitHub</a>
+                    <a href="https://github.com/EricPanDev/Breadcord/releases" target="_blank">Releases</a>
+                    <a href="https://github.com/EricPanDev/Breadcord/blob/main/LICENSE" target="_blank">License</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Breadcord. Made with 🍞 by <a href="https://github.com/ericpandev" target="_blank">ericpandev</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
