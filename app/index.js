@@ -1,7 +1,11 @@
-const { app, BrowserWindow, screen, ipcMain, ipcRenderer } = require('electron');
+const { app, BrowserWindow, screen, ipcMain } = require('electron');
 const path = require('path');
 const windowStateKeeper = require('electron-window-state');
 const WebSocket = require('ws');
+
+ipcMain.on('log', (event, log) => {
+  console.log('[Renderer]', log);
+});
 
 const {
   initTokenStore,
@@ -32,7 +36,7 @@ function handle_ws(token) {
 
     ws = new WebSocket(GATEWAY_URL);
 
-    ws.on('open', () => log('ws open'));
+    ws.on('open', () => log('WS established'));
 
     ws.on('message', (buf) => {
       let pkt;
@@ -49,8 +53,6 @@ function handle_ws(token) {
           heartbeatIntervalMs = pkt?.d?.heartbeat_interval;
           log(`HELLO heartbeat_interval=${heartbeatIntervalMs}ms`);
           startHeartbeats(heartbeatIntervalMs);
-
-          console.log("TOKEN", token);
 
           send({
             op: 2,
@@ -211,7 +213,7 @@ function createWindow() {
   mainWin.once('ready-to-show', () => { if (mainWindowState.isFullScreen) { mainWin.setFullScreen(true); } else if (mainWindowState.isMaximized) { mainWin.maximize(); } mainWin.show(); });
 
   load_token().then(token => {
-    console.log('Loaded token:', token ? token.split('.')[0]+".xxxxxxx.xxxxxxx..." : 'No token found');
+    console.log('[Auth] Loaded token from keystore:', token ? token.split('.')[0]+".xxxxxxx.xxxxxxx..." : 'No token found');
     const hasToken = !!(token);
     if (hasToken) {
       mainWin.loadFile(path.join(__dirname, 'src', 'index.html'));
@@ -242,6 +244,21 @@ app.whenReady().then(() => {
   });
 });
 
+const fs   = require('node:fs');
+// BreadAPI 
+function getPlugins() {
+  const pluginsDir = path.join(__dirname, 'src', 'plugins');
+  try {
+    return fs.readdirSync(pluginsDir, { withFileTypes: true })
+      .filter(dirent => dirent.isDirectory())
+      .map(dirent => dirent.name);
+  } catch (e) {
+    console.error('[BreadAPI] Failed to read plugins directory:', e);
+    return [];
+  }
+}
+ipcMain.handle('plugins:list', async () => getPlugins());
+
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
@@ -263,8 +280,4 @@ ipcMain.on('token-found', (event, token) => {
   else {
     console.log("Not logged in, prompting login...");
   }
-});
-
-ipcMain.on('log', (event, log) => {
-  console.log('Renderer log:', log);
 });

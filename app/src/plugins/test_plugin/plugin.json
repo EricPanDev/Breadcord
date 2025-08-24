@@ -1,0 +1,8 @@
+{
+    "id": "test_plugin",
+    "name": "Test Plugin",
+    "version": "1.0.0",
+    "description": "A plugin for testing purposes",
+    "github": "https://github.com/ericpandev/breadcord",
+    "dependencies": ["breadcore"]
+}

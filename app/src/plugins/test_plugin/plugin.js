@@ -1,0 +1,1 @@
+document.body.innerHTML += '<br>Test plugin Loaded!';

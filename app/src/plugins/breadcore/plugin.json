@@ -1,0 +1,8 @@
+{
+    "id": "breadcore",
+    "name": "Breadcore",
+    "version": "1.0.0",
+    "description": "Breadcord core",
+    "github": "https://github.com/ericpandev/breadcord",
+    "dependencies": []
+}
