@@ -1,213 +1,376 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Breadcord - Discord Client, Reimagined</title>
-    <meta name="description" content="Breadcord is a lightweight, bread themed Discord client with an easy to use plugin system.">
-    <link rel="icon" type="image/png" href="assets/images/breadcord-logo.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Breadcord – Discord Client, Reimagined</title>
+  <meta name="description" content="Breadcord is a lightweight, bread‑themed Discord client with an easy plugin system." />
+  <link rel="icon" type="image/png" href="assets/images/breadcord-logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    pre, code {
+        font-family: 'Fira Mono', 'Consolas', 'Menlo', 'Monaco', monospace;
+        background: #fff8e6;
+        color: #8b5e34;
+        border-radius: 10px;
+        padding: 12px 16px;
+        font-size: 15px;
+        line-height: 1.5;
+        overflow-x: auto;
+        box-shadow: 0 2px 8px rgba(139,94,52,0.07);
+        border: 1px solid var(--bc-line);
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    code {
+        padding: 2px 6px;
+        border-radius: 6px;
+        background: #fffbe9;
+        font-size: 14px;
+        color: var(--bc-accent);
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    pre code {
+        padding: 0;
+        background: none;
+        color: inherit;
+        font-size: inherit;
+        border-radius: 0;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+    /* ——— Brand Tokens (leaner palette) ——— */
+    :root {
+      --bc-bg: #fffdf8;         /* bakery paper */
+      --bc-surface: #ffffff;    /* card surface */
+      --bc-line: #ebe6dd;       /* subtle lines */
+      --bc-text: #2d241b;       /* dark rye */
+      --bc-text-muted: #6c5c4a; /* toasted */
+      --bc-primary: #e5b84a;    /* brioche */
+      --bc-primary-strong: #b98519; /* crust */
+      --bc-accent: #8b5e34;     /* whole wheat */
+
+      --radius: 16px;
+      --radius-sm: 10px;
+      --shadow-1: 0 6px 20px rgba(0,0,0,.06);
+      --shadow-2: 0 14px 32px rgba(0,0,0,.08);
+      --maxw: 1120px;
+      --space-1: 4px;  --space-2: 8px;  --space-3: 12px;  --space-4: 16px;
+      --space-5: 20px; --space-6: 24px; --space-8: 32px;  --space-10: 40px;
+      --space-12: 48px; --space-16: 64px; --space-20: 80px; --space-24: 96px;
+      --transition: 200ms cubic-bezier(.2,.7,.2,1);
+    }
+
+    /* ——— Base ——— */
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      color: var(--bc-text);
+      background: radial-gradient(80rem 60rem at 10% -20%, #fff6dc 0%, transparent 40%),
+                  radial-gradient(60rem 40rem at 110% -10%, #ffefd2 0%, transparent 40%),
+                  var(--bc-bg);
+      line-height: 1.6;
+    }
+    img { max-width: 100%; display: block; }
+    .container { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 0 var(--space-6); }
+
+    /* ——— Navigation ——— */
+    .nav {
+      position: sticky; top: 0; z-index: 20;
+      backdrop-filter: blur(10px);
+      background: color-mix(in oklab, #ffffff 80%, transparent);
+      border-bottom: 1px solid var(--bc-line);
+    }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; padding: var(--space-4) 0; }
+    .brand { display: flex; align-items: center; gap: var(--space-3); font-family: Manrope, Inter, sans-serif; font-weight: 800; letter-spacing: .2px; }
+    .brand img { width: 36px; height: 36px; border-radius: 10px; box-shadow: var(--shadow-1); }
+
+    .menu { display: flex; gap: var(--space-6); align-items: center; }
+    .menu a { color: var(--bc-text-muted); text-decoration: none; font-weight: 600; padding: 10px 12px; border-radius: 10px; transition: background var(--transition), color var(--transition); }
+    .menu a:hover { background: #fff8e6; color: var(--bc-text); }
+
+    .hamburger { display: none; background: none; border: 0; width: 40px; height: 40px; border-radius: 10px; align-items: center; justify-content: center; }
+    .hamburger span { width: 22px; height: 2px; background: var(--bc-text); position: relative; display: block; }
+    .hamburger span::before, .hamburger span::after { content: ""; position: absolute; left: 0; right: 0; height: 2px; background: var(--bc-text); }
+    .hamburger span::before { top: -6px; } .hamburger span::after { top: 6px; }
+
+    @media (max-width: 900px) {
+      .menu { display: none; position: fixed; inset: 64px 16px auto 16px; flex-direction: column; background: var(--bc-surface); border: 1px solid var(--bc-line); box-shadow: var(--shadow-2); border-radius: var(--radius); padding: var(--space-6); }
+      .menu.open { display: flex; }
+      .hamburger { display: inline-flex; }
+    }
+
+    /* ——— Hero ——— */
+    .hero { padding: var(--space-24) 0 var(--space-16); }
+    .hero-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: var(--space-12); align-items: center; }
+    @media (max-width: 1000px) { .hero-grid { grid-template-columns: 1fr; text-align: center; } }
+
+    .hero-eyebrow { font-weight: 700; color: var(--bc-accent); letter-spacing: .08em; text-transform: uppercase; font-size: 12px; }
+    .hero h1 { font-family: Manrope, Inter, sans-serif; font-size: clamp(40px, 6vw, 64px); line-height: 1.1; margin: var(--space-3) 0 var(--space-4); }
+    .hero p { max-width: 56ch; color: var(--bc-text-muted); margin: 0 0 var(--space-8); }
+
+    .cta-row { display: flex; gap: var(--space-4); flex-wrap: wrap; }
+    .btn { appearance: none; border: 0; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; font-weight: 700; border-radius: 999px; padding: 14px 20px; text-decoration: none; transition: transform var(--transition), box-shadow var(--transition), background var(--transition); }
+    .btn-primary {
+      background: linear-gradient(90deg, #e5b84a 0%, #f7c96a 100%);
+      color: #2d241b;
+      box-shadow: 0 2px 8px rgba(185,133,25,0.10);
+      border: 1px solid #e5b84a;
+      transition: background var(--transition), box-shadow var(--transition), transform var(--transition);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(90deg, #f7c96a 0%, #e5b84a 100%);
+      box-shadow: 0 8px 24px -6px rgba(185,133,25,0.18);
+      transform: translateY(-2px) scale(1.03);
+    }
+    .btn-ghost { background: #fff; color: var(--bc-text); border: 1px solid var(--bc-line); }
+    .btn-ghost:hover { background: #fff9ef; }
+
+    .hero-card { position: relative; background: var(--bc-surface); border: 1px solid var(--bc-line); border-radius: 24px; padding: var(--space-12); box-shadow: var(--shadow-2); overflow: hidden; }
+    .hero-card::after { content: ""; position: absolute; inset: -40% -30% auto auto; aspect-ratio: 1/1; background: radial-gradient(circle at center, #ffe8a6 0%, transparent 60%); filter: blur(40px); opacity: .7; }
+    .hero-logo { width: 96px; height: 96px; border-radius: 22px; box-shadow: var(--shadow-1); margin-bottom: var(--space-6); }
+
+    .badges { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-8); }
+    .badges img { height: 24px; opacity: .95; filter: saturate(.95); }
+
+    /* ——— Sections ——— */
+    section { padding: var(--space-20) 0; }
+    .section-title { text-align: center; font-family: Manrope, Inter, sans-serif; font-size: clamp(28px, 3.4vw, 40px); margin: 0 0 var(--space-12); }
+    .muted { color: var(--bc-text-muted); }
+
+    /* Features */
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-6); }
+    @media (max-width: 900px) { .features { grid-template-columns: 1fr; } }
+    .feature { background: var(--bc-surface); border: 1px solid var(--bc-line); border-radius: var(--radius); padding: var(--space-8); transition: transform var(--transition), box-shadow var(--transition); }
+    .feature:hover { transform: translateY(-4px); box-shadow: var(--shadow-1); }
+    .feature h3 { margin: var(--space-3) 0 var(--space-2); font-size: 20px; }
+    .emoji { font-size: 28px; }
+
+    /* Download */
+    .notice { display: grid; gap: var(--space-3); background: #fff; border: 1px solid var(--bc-line); border-radius: var(--radius); padding: var(--space-6); }
+    .notice p { margin: 0; font-size: 14px; }
+    .notice strong { color: var(--bc-accent); }
+
+    .dl-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-6); margin-top: var(--space-8); }
+    @media (max-width: 1000px) { .dl-grid { grid-template-columns: 1fr; } }
+    .card { background: var(--bc-surface); border: 1px solid var(--bc-line); border-radius: var(--radius); padding: var(--space-8); box-shadow: var(--shadow-1); }
+    .card h3 { margin: 0 0 var(--space-2); }
+    .card .os { font-size: 40px; margin-bottom: var(--space-4); }
+
+    .dl-links { display: grid; gap: var(--space-3); }
+    .dl-row { display: grid; grid-template-columns: 96px 1fr; gap: var(--space-3); align-items: center; }
+    .dl-row .label { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--bc-text-muted); }
+    .chip { display: inline-flex; align-items: center; justify-content: center; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--bc-line); background: #fff; text-decoration: none; color: var(--bc-text); font-weight: 700; }
+    .chip:hover { background: #fff9ef; }
+
+    /* GitHub */
+    .gh-grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: var(--space-8); align-items: center; }
+    @media (max-width: 900px) { .gh-grid { grid-template-columns: 1fr; } }
+    .gh-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-4); }
+    .gh-btn { background: #fff; border: 1px solid var(--bc-line); border-radius: 12px; padding: 14px; display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none; color: var(--bc-text); font-weight: 700; }
+    .gh-btn:hover { background: #fff9ef; }
+
+    /* Footer */
+    footer { border-top: 1px solid var(--bc-line); background: #fff; }
+    .foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-6); padding: var(--space-8) 0; flex-wrap: wrap; }
+    .foot a { color: var(--bc-text); text-decoration: none; }
+    .foot a:hover { text-decoration: underline; }
+
+    /* Focus */
+    :focus-visible { outline: 3px solid color-mix(in oklab, var(--bc-primary) 70%, #000 10%); outline-offset: 2px; border-radius: 8px; }
+    .brand-name {
+      font-weight: 700;
+      font-size: 20px;
+      color: var(--bc-accent);
+      text-decoration: none !important;
+      cursor: pointer;
+    }
+    .brand:link, .brand:visited, .brand:hover, .brand:active {
+      text-decoration: none !important;
+    }
+    .platform {
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        margin-right: 8px;
+        object-fit: contain;
+    }
+  </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <img src="assets/images/breadcord-logo.png" alt="Breadcord Logo" class="logo">
-                <span class="brand-name">Breadcord</span>
-            </div>
-            <ul class="nav-menu">
-                <li><a href="#home" class="nav-link">Home</a></li>
-                <li><a href="#about" class="nav-link">About</a></li>
-                <li><a href="#download" class="nav-link">Download</a></li>
-                <li><a href="#github" class="nav-link">GitHub</a></li>
-            </ul>
-            <div class="hamburger">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
+  <!-- Nav -->
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="#home" aria-label="Breadcord home">
+        <img src="assets/images/breadcord-logo.png" alt="Breadcord logo" />
+        <span class="brand-name">Breadcord</span>
+      </a>
+      <div class="menu" id="menu">
+        <a href="#about">About</a>
+        <a href="#download">Download</a>
+        <a href="#github">GitHub</a>
+      </div>
+      <button class="hamburger" id="hamburger" aria-label="Toggle menu"><span></span></button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header id="home" class="hero">
+    <div class="container hero-grid">
+      <div>
+        <div class="hero-eyebrow">Discord client, reimagined</div>
+        <h1>Breadcord</h1>
+        <p>A lightweight, bread‑themed Discord client with a simple, extensible plugin system. Born as a joke, baked into something actually delightful to use.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#download">Download now</a>
+          <a class="btn btn-ghost" href="#about">Learn more</a>
         </div>
-    </nav>
-
-    <!-- Hero Section -->
-    <section id="home" class="hero">
-        <div class="hero-container">
-            <div class="hero-content">
-                <img src="assets/images/breadcord-logo.png" alt="Breadcord" class="hero-logo">
-                <h1 class="hero-title">Breadcord</h1>
-                <p class="hero-subtitle">Discord Client, Reimagined</p>
-                <p class="hero-description">A lightweight, bread themed Discord client with an easy to use plugin system</p>
-                <div class="hero-buttons">
-                    <a href="#download" class="btn btn-primary btn-lg">Download Now</a>
-                    <a href="#about" class="btn btn-secondary btn-lg">Learn More</a>
-                </div>
-            </div>
-            <div class="hero-badges">
-                <img src="https://img.shields.io/github/actions/workflow/status/EricPanDev/Breadcord/release.yml?branch=dev&logo=github&label=Build&logo=bitrise&style=for-the-badge" alt="Build Status">
-                <img src="https://img.shields.io/github/v/release/EricPanDev/Breadcord?logo=github&label=Release&style=for-the-badge" alt="Latest Release">
-                <img src="https://img.shields.io/github/license/EricPanDev/Breadcord?logo=open-source-initiative&logoColor=white&style=for-the-badge" alt="License">
-            </div>
+        <div class="badges" aria-label="project status">
+          <img alt="Build" src="https://img.shields.io/github/actions/workflow/status/EricPanDev/Breadcord/release.yml?branch=dev&logo=github&label=Build&style=flat"/>
+          <img alt="Release" src="https://img.shields.io/github/v/release/EricPanDev/Breadcord?logo=github&label=Release&style=flat"/>
+          <img alt="License" src="https://img.shields.io/github/license/EricPanDev/Breadcord?logo=open-source-initiative&logoColor=white&style=flat"/>
         </div>
-    </section>
+      </div>
 
-    <!-- About Section -->
-    <section id="about" class="about section">
-        <div class="container">
-            <h2 class="section-title">About Breadcord</h2>
-            <div class="about-content">
-                <div class="about-text">
-                    <p class="about-description">
-                        Breadcord is a lightweight, bread themed Discord client with an easy to use plugin system. 
-                        Originally created as a joke, we've decided to rewrite the client to be actually usable after 
-                        seeing people legitimately wanting to use this client.
-                    </p>
-                    <div class="features">
-                        <div class="feature animate-fade-in-up">
-                            <div class="feature-icon">🍞</div>
-                            <h3>Bread Themed</h3>
-                            <p>Enjoy Discord with a warm, cozy bread-themed interface</p>
-                        </div>
-                        <div class="feature animate-fade-in-up">
-                            <div class="feature-icon">🔌</div>
-                            <h3>Plugin System</h3>
-                            <p>Easy to use plugin system for extending functionality</p>
-                        </div>
-                        <div class="feature animate-fade-in-up">
-                            <div class="feature-icon">⚡</div>
-                            <h3>Lightweight</h3>
-                            <p>Fast and efficient Discord client that doesn't slow you down</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+      <div class="hero-card" aria-hidden="true">
+        <img class="hero-logo" src="assets/images/breadcord-logo.png" alt="Breadcord logo large" />
+        <h3 style="margin:0 0 6px">Clean UI, warm vibe</h3>
+        <p class="muted" style="margin:0">Flat surfaces, consistent spacing, minimal motion. Just the crumb you need.</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- About -->
+  <section id="about">
+    <div class="container">
+      <h2 class="section-title">About Breadcord</h2>
+      <p class="muted" style="text-align:center; max-width: 70ch; margin: 0 auto var(--space-12);">We rewrote the client from scratch after folks actually wanted to use it. The goal: fast, friendly, and flexible—without the bloat.</p>
+      <div class="features">
+        <article class="feature">
+          <div class="emoji" aria-hidden="true">🍞</div>
+          <h3>Bread‑themed, tastefully</h3>
+          <p class="muted">Warm colors, rounded corners, and subtle texture. Cozy without shouting.</p>
+        </article>
+        <article class="feature">
+          <div class="emoji" aria-hidden="true">🔌</div>
+          <h3>Plugin system</h3>
+          <p class="muted">A straightforward API to add features you actually want. No kitchen sink.</p>
+        </article>
+        <article class="feature">
+          <div class="emoji" aria-hidden="true">⚡</div>
+          <h3>Lightweight</h3>
+          <p class="muted">Snappy startup, low memory footprint, responsive interactions.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Download -->
+  <section id="download">
+    <div class="container">
+      <h2 class="section-title">Download Breadcord</h2>
+      <div class="notice" role="note">
+        <p><strong>Windows:</strong> Builds are unsigned; SmartScreen may warn. Safe to proceed.</p>
+        <p><strong>macOS:</strong> Approve the app in Settings if it shows as “Damaged”.</p>
+        <p><strong>macOS quick install:</strong> <code>curl -fs https://breadcord.ericpan.dev/macos_setup.sh | bash</code></p>
+      </div>
+
+      <div class="dl-grid">
+        <!-- Windows -->
+        <div class="card">
+          <img src="windows.png" alt="Windows" class="platform"/>
+          <h3>Windows</h3>
+          <div class="dl-links">
+            <a class="chip" href="https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-windows-amd64.exe">amd64 · .exe</a>
+            <a class="chip" href="https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-windows-arm64.exe">arm64 · .exe</a>
+          </div>
         </div>
-    </section>
-
-    <!-- Download Section -->
-    <section id="download" class="download section">
-        <div class="container">
-            <h2 class="section-title">Download Breadcord</h2>
-            <div class="download-notice">
-                <div class="notice warning">
-                    <strong>Windows:</strong> These builds are not signed with a paid certificate, so they may trigger SmartScreen. This is safe to ignore.
-                </div>
-                <div class="notice info">
-                    <strong>macOS:</strong> You will need to approve the app in settings or it will show as "Damaged"
-                </div>
-                <div class="notice tip">
-                    <strong>macOS Quick Install:</strong> Run this command in terminal:<br>
-                    <code>curl -fsSL https://raw.githubusercontent.com/EricPanDev/Breadcord/refs/heads/dev/docs/macos_setup.sh | bash</code>
-                </div>
-            </div>
-            
-            <div class="download-grid">
-                <!-- Windows -->
-                <div class="download-card animate-scale-in">
-                    <div class="os-icon">🪟</div>
-                    <h3>Windows</h3>
-                    <div class="download-links">
-                        <a href="https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-windows-amd64.exe" class="download-btn">
-                            <span class="arch">amd64</span>
-                            <span class="format">.exe</span>
-                        </a>
-                        <a href="https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-windows-arm64.exe" class="download-btn">
-                            <span class="arch">arm64</span>
-                            <span class="format">.exe</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- macOS -->
-                <div class="download-card animate-scale-in">
-                    <div class="os-icon">🍎</div>
-                    <h3>macOS</h3>
-                    <div class="download-links">
-                        <a href="https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-macos-amd64.dmg" class="download-btn">
-                            <span class="arch">Intel</span>
-                            <span class="format">.dmg</span>
-                        </a>
-                        <a href="https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-macos-arm64.dmg" class="download-btn">
-                            <span class="arch">Apple Silicon</span>
-                            <span class="format">.dmg</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Linux -->
-                <div class="download-card animate-scale-in">
-                    <div class="os-icon">🐧</div>
-                    <h3>Linux</h3>
-                    <div class="download-links">
-                        <div class="arch-group">
-                            <span class="arch-label">amd64</span>
-                            <a href="https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-linux-amd64.AppImage" class="download-btn">AppImage</a>
-                            <a href="https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-linux-amd64.deb" class="download-btn">deb</a>
-                        </div>
-                        <div class="arch-group">
-                            <span class="arch-label">arm64</span>
-                            <a href="https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-linux-arm64.AppImage" class="download-btn">AppImage</a>
-                            <a href="https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-linux-arm64.deb" class="download-btn">deb</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <!-- macOS -->
+        <div class="card">
+            <img src="apple.png" alt="macOS" class="platform"/>
+          <h3>macOS</h3>
+          <div class="dl-links">
+            <a class="chip" href="https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-macos-amd64.dmg">Intel · .dmg</a>
+            <a class="chip" href="https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-macos-arm64.dmg">Apple Silicon · .dmg</a>
+          </div>
         </div>
-    </section>
-
-    <!-- GitHub Section -->
-    <section id="github" class="github section">
-        <div class="container">
-            <h2 class="section-title">Open Source</h2>
-            <div class="github-content">
-                <div class="github-text">
-                    <p>Breadcord is open source and developed on GitHub. Join our community, contribute to the project, or report issues!</p>
-                    <div class="github-links">
-                        <a href="https://github.com/EricPanDev/Breadcord" class="github-btn" target="_blank">
-                            <span class="github-icon">📁</span>
-                            View Repository
-                        </a>
-                        <a href="https://github.com/EricPanDev/Breadcord/issues" class="github-btn" target="_blank">
-                            <span class="github-icon">🐛</span>
-                            Report Issues
-                        </a>
-                        <a href="https://github.com/EricPanDev/Breadcord/releases" class="github-btn" target="_blank">
-                            <span class="github-icon">🚀</span>
-                            View Releases
-                        </a>
-                        <a href="https://github.com/EricPanDev/Breadcord/actions" class="github-btn" target="_blank">
-                            <span class="github-icon">⚙️</span>
-                            Build Status
-                        </a>
-                    </div>
-                </div>
+        <!-- Linux -->
+        <div class="card">
+          <img src="linux.png" alt="Linux" class="platform"/>
+          <h3>Linux</h3>
+          <div class="dl-links">
+            <div class="dl-row">
+              <span class="label">amd64</span>
+              <div class="row-links">
+                <a class="chip" href="https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-linux-amd64.AppImage">AppImage</a>
+                <a class="chip" href="https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-linux-amd64.deb">.deb</a>
+              </div>
             </div>
+            <div class="dl-row">
+              <span class="label">arm64</span>
+              <div class="row-links">
+                <a class="chip" href="https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-linux-arm64.AppImage">AppImage</a>
+                <a class="chip" href="https://github.com/ericpandev/breadcord/releases/latest/download/Breadcord-linux-arm64.deb">.deb</a>
+              </div>
+            </div>
+          </div>
         </div>
-    </section>
+      </div>
+    </div>
+  </section>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-brand">
-                    <img src="assets/images/breadcord-logo.png" alt="Breadcord" class="footer-logo">
-                    <span>Breadcord</span>
-                </div>
-                <div class="footer-links">
-                    <a href="https://github.com/EricPanDev/Breadcord" target="_blank">GitHub</a>
-                    <a href="https://github.com/EricPanDev/Breadcord/releases" target="_blank">Releases</a>
-                    <a href="https://github.com/EricPanDev/Breadcord/blob/main/LICENSE" target="_blank">License</a>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2024 Breadcord. Made with 🍞 by <a href="https://github.com/ericpandev" target="_blank">ericpandev</a></p>
-            </div>
+  <!-- GitHub -->
+  <section id="github">
+    <div class="container gh-grid">
+      <div>
+        <h2 class="section-title" style="text-align:left">Open Source</h2>
+        <p class="muted">Join the community on GitHub—contribute, open issues, or track releases.</p>
+        <div class="gh-actions" style="margin-top: var(--space-6)">
+          <a class="gh-btn" href="https://github.com/EricPanDev/Breadcord" target="_blank" rel="noreferrer">📁 View Repository</a>
+          <a class="gh-btn" href="https://github.com/EricPanDev/Breadcord/issues" target="_blank" rel="noreferrer">🐛 Report Issues</a>
+          <a class="gh-btn" href="https://github.com/EricPanDev/Breadcord/releases" target="_blank" rel="noreferrer">🚀 Releases</a>
+          <a class="gh-btn" href="https://github.com/EricPanDev/Breadcord/actions" target="_blank" rel="noreferrer">⚙️ Build Status</a>
         </div>
-    </footer>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Why a rewrite?</h3>
+        <p class="muted">Because a meme shouldn’t be a maintenance nightmare. This version keeps the fun while focusing on stability, performance, and a small, sensible plugin API.</p>
+      </div>
+    </div>
+  </section>
 
-    <script src="script.js"></script>
+  <!-- Footer -->
+  <footer>
+    <div class="container foot">
+      <div style="display:flex; align-items:center; gap:10px">
+        <img src="assets/images/breadcord-logo.png" alt="Breadcord" width="24" height="24" style="border-radius:6px" />
+        <strong>Breadcord</strong>
+      </div>
+      <nav style="display:flex; gap:16px">
+        <a href="https://github.com/EricPanDev/Breadcord" target="_blank" rel="noreferrer">GitHub</a>
+        <a href="https://github.com/EricPanDev/Breadcord/releases" target="_blank" rel="noreferrer">Releases</a>
+        <a href="https://github.com/EricPanDev/Breadcord/blob/main/LICENSE" target="_blank" rel="noreferrer">License</a>
+      </nav>
+      <div class="muted">© 2024 Breadcord • Made with 🍞 by <a href="https://github.com/ericpandev" target="_blank" rel="noreferrer">ericpandev</a></div>
+    </div>
+  </footer>
+
+  <script>
+    // mobile nav
+    const burger = document.getElementById('hamburger');
+    const menu = document.getElementById('menu');
+    burger?.addEventListener('click', () => menu.classList.toggle('open'));
+
+    // clamp badge count if shields fail to load, avoid layout shift
+    const imgs = document.querySelectorAll('.badges img');
+    imgs.forEach(img => img.addEventListener('error', () => img.style.display = 'none'));
+  </script>
 </body>
 </html>
