@@ -16,6 +16,16 @@
 
 Breadcord is a lightweight, bread themed Discord client with a easy to use plugin system. Originally created as a joke, I've decided to rewrite the client to be actually usable after seeing people legitimately wanting to use this client.
 
+## 📚 Documentation
+
+Complete documentation is available in the [docs/](docs/) folder:
+
+- **[Installation Guide](docs/installation.md)** - How to install Breadcord
+- **[User Guide](docs/user-guide.md)** - Getting started and features
+- **[Plugin Development](docs/plugin-development.md)** - Creating plugins
+- **[API Reference](docs/api-reference.md)** - BreadAPI documentation
+- **[Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
+
 # Automatic Builds
 > [!WARNING]  
 > **Windows** - These builds are not signed with a paid certificate, so they may trigger SmartScreen. This is safe to ignore.<br>**MacOS** - You will need to approve the app in settings or it will show as "Damaged"
