@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔒 Security Vulnerability
+    url: mailto:eric@ericpan.dev?subject=SECURITY
+    about: Please report security vulnerabilities via email, not through GitHub issues
+  - name: 📚 Documentation
+    url: https://github.com/EricPanDev/Breadcord/blob/main/README.md
+    about: Check the README for basic information about Breadcord
+  - name: 🤝 Contributing Guidelines
+    url: https://github.com/EricPanDev/Breadcord/blob/main/CONTRIBUTING.md
+    about: Learn how to contribute to Breadcord
