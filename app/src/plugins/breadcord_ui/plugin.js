@@ -1,6 +1,6 @@
 const breadcord = BreadUI.create_container("breadcord", "vstack", {});
 const breadcordNav = BreadUI.create_container("breadcord-nav", "bar", {});
-const breadcordApp = BreadUI.create_container("breadcord-app", "vstack", {});
+const breadcordApp = BreadUI.create_container("breadcord-app", "hstack", {});
 
 const nav_btn_close = BreadUI.create_element("nav-btn-close", {}, {
   html: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -23,23 +23,21 @@ const nav_btn_fullscreen = BreadUI.create_element("nav-btn-fullscreen", {}, {
          </svg>`
 })
 
-nav_btn_close.onclick(() => {
-    BreadAPI.app.close()
-  });
-
-nav_btn_minimize.onclick(() => {
-    BreadAPI.app.minimize()
-  });
-
-nav_btn_fullscreen.onclick(() => {
-    BreadAPI.app.maximize()
-  });
+nav_btn_close.onclick(() => { BreadAPI.app.close() });
+nav_btn_minimize.onclick(() => { BreadAPI.app.minimize() });
+nav_btn_fullscreen.onclick(() => { BreadAPI.app.maximize() });
 
 breadcordNav
   .add(nav_btn_close)
   .add(nav_btn_minimize)
   .add(nav_btn_fullscreen)
   .add(BreadUI.create_element("nav-text", {}, { text: "Breadcord" }))
+
+breadcordApp
+  .add(BreadUI.create_container("breadcord-server-container", "vstack", {}))
+  .add(BreadUI.create_container("breadcord-channel-container", "vstack", {}))
+  .add(BreadUI.create_container("breadcord-message-container", "vstack", {}))
+  .add(BreadUI.create_container("breadcord-app-sidebar", "vstack", {}))
 
 breadcord
   .add(breadcordNav)
@@ -48,18 +46,18 @@ breadcord
 breadcord.mount("#app");
 
 
+// Debug Light/Dark Theme Toggle
 const root = document.documentElement;
 root.classList.add('dark');
+document.addEventListener('keydown', (e) => {
+  if (e.key.toLowerCase() === 'p' && !e.repeat && (e.ctrlKey || e.metaKey)) {
+    root.classList.toggle('dark');
+    root.classList.toggle('light');
+    e.preventDefault();
+  }
+});
 
-const themeToggleBtn = document.createElement('button');
-themeToggleBtn.textContent = 'debug toggle theme button';
-themeToggleBtn.style.margin = '16px';
-themeToggleBtn.onclick = () => {
-  root.classList.toggle('dark');
-  root.classList.toggle('light');
-};
-document.querySelector('div[data-container-id="breadcord-app"]').appendChild(themeToggleBtn);
-
+// Load Breadcord CSS
 const link = document.createElement('link');
 link.rel = 'stylesheet';
 link.href = 'plugins/breadcord_ui/theme.css';

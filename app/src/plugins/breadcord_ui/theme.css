@@ -119,6 +119,54 @@ html.dark, body.dark {
   flex-direction: column;
 }
 
+[data-type="hstack"] {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* fixed server sidebar */
+[data-container-id="breadcord-server-container"] {
+  flex: 0 0 60px;
+  background-color: black;
+  overflow: auto;
+}
+
+/* channel list with resizable handle */
+[data-container-id="breadcord-channel-container"] {
+  flex: 0 0 240px;
+  min-width: 150px;   /* prevent too small */
+  max-width: 400px;   /* prevent too large */
+  overflow: auto;
+  background-color: #2f3136;
+}
+
+/* draggable divider */
+.resizer {
+  width: 5px;
+  cursor: col-resize;
+  background-color: #1e1e1e;
+  user-select: none;
+}
+
+[data-container-id="breadcord-message-container"] {
+  flex: 1 1 auto;
+  min-width: 200px;
+  overflow: auto;
+  background-color: black;
+}
+
+[data-container-id="breadcord-app-sidebar"] {
+  flex: 0 0 300px;
+  min-width: 200px;
+  max-width: 500px;
+  overflow: auto;
+  background-color: #202225;
+  display: none;
+}
+
 [data-type="nav-btn-close"],
 [data-type="nav-btn-minimize"],
 [data-type="nav-btn-fullscreen"] {
@@ -168,7 +216,6 @@ html.dark, body.dark {
   width: 100%;
   height: 100dvh;
   background: var(--color-background);
-  border: 1px solid var(--color-muted);
   overflow: hidden;
   color: var(--color-text);
 }
@@ -196,7 +243,6 @@ html.dark, body.dark {
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
-  padding: 12px;
   background: var(--color-background);
   color: var(--color-text);
 }
