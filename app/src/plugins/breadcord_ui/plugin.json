@@ -1,8 +1,8 @@
 {
-    "id": "test_plugin",
-    "name": "Test Plugin",
+    "id": "breadcord_ui",
+    "name": "Bread UI",
     "version": "1.0.0",
-    "description": "A plugin for testing purposes",
+    "description": "The default UI for Breadcord",
     "github": "https://github.com/ericpandev/breadcord",
     "dependencies": ["breadcore"]
 }

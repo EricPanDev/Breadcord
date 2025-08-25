@@ -281,3 +281,48 @@ ipcMain.on('token-found', (event, token) => {
     console.log("Not logged in, prompting login...");
   }
 });
+
+app.on('browser-window-created', (event, window) => {
+  window.webContents.on('before-input-event', (event, input) => {
+    const isDevToolsKey =
+      // Windows/Linux: Ctrl+Shift+I
+      (input.control && input.shift && input.key.toLowerCase() === 'i') ||
+      // macOS: Cmd+Option+I
+      (input.meta && input.alt && input.key.toLowerCase() === 'i') ||
+      // F12 (all platforms)
+      (input.key === 'F12');
+
+    if (isDevToolsKey) {
+      window.webContents.openDevTools({ mode: 'detach' });
+      event.preventDefault();
+    }
+  });
+});
+
+function withWin(fn) {
+  if (mainWin && !mainWin.isDestroyed()) fn(mainWin);
+}
+
+ipcMain.on('close', () => {
+  withWin(win => win.close());
+});
+
+ipcMain.on('minimize', () => {
+  withWin(win => win.minimize());
+});
+ipcMain.on('maximize', () => {
+  withWin(win => {
+    if (process.platform === 'darwin') {
+      const isSimple = win.isSimpleFullScreen && win.isSimpleFullScreen();
+      if (win.setSimpleFullScreen) {
+        win.setSimpleFullScreen(!isSimple);
+        return;
+      }
+      const isFull = win.isFullScreen();
+      win.setFullScreen(!isFull);
+    } else {
+      const isFull = win.isFullScreen();
+      win.setFullScreen(!isFull);
+    }
+  });
+});

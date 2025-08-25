@@ -1,0 +1,202 @@
+/* Ubuntu Regular */
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('styles/fonts/Ubuntu-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* Ubuntu Italic */
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('styles//fonts/Ubuntu-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+}
+
+/* Ubuntu Bold */
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('styles//fonts/Ubuntu-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* Ubuntu Bold Italic */
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('styles//fonts/Ubuntu-BoldItalic.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+}
+
+/* Ubuntu Light */
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('styles//fonts/Ubuntu-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+}
+
+/* Ubuntu Light Italic */
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('styles//fonts/Ubuntu-LightItalic.ttf') format('truetype');
+  font-weight: 300;
+  font-style: italic;
+}
+
+/* Ubuntu Medium */
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('styles//fonts/Ubuntu-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+/* Ubuntu Medium Italic */
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('styles//fonts/Ubuntu-MediumItalic.ttf') format('truetype');
+  font-weight: 500;
+  font-style: italic;
+}
+
+:root {
+  --breadcord-nav-height: 32px;
+  --font-family: 'Ubuntu', sans-serif;
+}
+
+* {
+  font-family: var(--font-family);
+}
+
+:root, 
+html, 
+body,
+[data-container-id="breadcord"],
+[data-container-id="breadcord-app"] {
+  transition: background-color 1s ease, color 1s ease, border-color 1s ease;
+}
+
+/* Light theme */
+html.light, body.light {
+  --color-background: #faf7f2;
+  --color-surface:    #f3eadf;
+  --color-primary:    #c68a4a;
+  --color-secondary:  #a86b39;
+  --color-accent:     #7d4e2f;
+  --color-contrast:   #3f2a1d;
+  --color-dark:       #231a14;
+  --color-highlight:  #fff1cc;
+  --color-muted:      #d8cbb8;
+  --color-text:       #2b2118;
+  --color-nav-text:   #cdaa7f;
+  --color-nav-btn:    #cdaa7f;
+  --color-nav-highlight: rgb(232, 216, 196);
+}
+
+/* Dark theme */
+html.dark, body.dark {
+  --color-background: #14110f;  /* dark rye */
+  --color-surface:    #1c1713;  /* slightly lifted panel */
+  --color-primary:    #d7a46b;  /* warm amber */
+  --color-secondary:  #b78455;  /* softer crust */
+  --color-accent:     #8e603b;  /* toast accent */
+  --color-contrast:   #e0c28f;  /* light accent for badges/borders */
+  --color-dark:       #f0d9b5;  /* pale wheat for highlights */
+  --color-highlight:  #f3eadf;  /* gentle highlight bg */
+  --color-muted:      #3c2f26;  /* low-contrast border */
+  --color-text:       #f5efe7;  /* warm near-white */
+  --color-nav-text:   #a08a71;  /* amber for nav text */
+  --color-nav-btn:    #a08a71;  /* amber for nav buttons */
+  --color-nav-highlight: #5e4b33;
+}
+
+[data-type="vstack"] {
+  display: flex;
+  flex-direction: column;
+}
+
+[data-type="nav-btn-close"],
+[data-type="nav-btn-minimize"],
+[data-type="nav-btn-fullscreen"] {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: default;
+  padding: 0;
+  margin: 0;
+  transition: background 0.2s;
+  color: var(--color-nav-btn);
+  border-radius: 50%;
+  -webkit-app-region: no-drag;
+}
+[data-type^="nav-btn-"] svg {
+  display: block;
+}
+[data-type^="nav-btn-"]:hover {
+  background-color: var(--color-nav-highlight);
+}
+
+[data-type="nav-text"] {
+  font-weight: 700;
+  color: var(--color-nav-text);
+  font-size: 15px;
+
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  pointer-events: none; 
+}
+
+[data-type="bar"] {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-muted);
+  color: var(--color-text);
+}
+
+[data-container-id="breadcord"] {
+  width: 100%;
+  height: 100dvh;
+  background: var(--color-background);
+  border: 1px solid var(--color-muted);
+  border-radius: 10px;
+  overflow: hidden;
+  color: var(--color-text);
+}
+
+[data-container-id="breadcord-nav"] {
+  height: var(--breadcord-nav-height);
+  flex: 0 0 var(--breadcord-nav-height);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-muted);
+  color: var(--color-text);
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  position: relative;        
+  gap: 6px;    
+  padding: 0 6px;
+
+  -webkit-app-region: drag;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+[data-container-id="breadcord-app"] {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px;
+  background: var(--color-background);
+  color: var(--color-text);
+}

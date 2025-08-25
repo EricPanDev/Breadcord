@@ -1,11 +1,5 @@
 // Note to plugin devs: BreadAPI.ready is already resolved as its used by the plugin loader. no need to await it.
 
-// BreadAPI.info('Breadcore plugin loading...');
-
-// BreadAPI.gateway.on_message((payload) => {
-//     BreadAPI.info(`[GW] ${JSON.stringify(payload).slice(0, 130)}...`);
-//   });
-
 /**
  * BreadUI: register element types, create containers/elements,
  * get containers by id, and run "before_dom_addition" hooks.
@@ -39,7 +33,7 @@ class BreadUI {
    * @returns {UIElement}
    */
   static create_element(typeName, style = {}, data = {}) {
-    BreadUI.#assertTypeRegistered(typeName);
+    // BreadUI.#assertTypeRegistered(typeName);
     const base = BreadUI.#types.get(typeName) || { style: {} };
     return new UIElement(typeName, BreadUI.#mergeStyles(base.style, style), data);
   }
@@ -56,7 +50,7 @@ class BreadUI {
     if (!id || typeof id !== "string") {
       throw new Error("create_container: id must be a non-empty string");
     }
-    BreadUI.#assertTypeRegistered(typeName);
+    // BreadUI.#assertTypeRegistered(typeName);
     if (BreadUI.#containers.has(id)) {
       throw new Error(`create_container: a container with id "${id}" already exists`);
     }
@@ -85,7 +79,7 @@ class BreadUI {
    * @param {(child:UIElement|UIContainer, parent:UIContainer)=>void} fn
    */
   static before_dom_addition(typeName, fn) {
-    BreadUI.#assertTypeRegistered(typeName);
+    // BreadUI.#assertTypeRegistered(typeName);
     if (typeof fn !== "function") {
       throw new Error("before_dom_addition: fn must be a function");
     }
@@ -150,11 +144,14 @@ class UINode {
 class UIElement extends UINode {
   constructor(type, style = {}, data = {}) {
     super(type, style);
-    this.data = { ...data }; // e.g., { text, html, attrs }
+    this.data = { ...data };   // e.g., { text, html, attrs }
+    this._domRef = null;       // HTMLElement after first toDOM()
   }
 
   toDOM() {
     const el = super.toDOM();
+    this._domRef = el;
+
     if (this.data.html != null) {
       el.innerHTML = String(this.data.html);
     } else if (this.data.text != null) {
@@ -167,6 +164,68 @@ class UIElement extends UINode {
     }
     return el;
   }
+
+  /** Update the text content (before or after mount). */
+  setText(text) {
+    this.data.text = text;
+    this.data.html = undefined;        // ensure we render as text, not HTML
+    if (this._domRef) this._domRef.textContent = String(text);
+    return this;                        // chainable
+  }
+
+  /** Optional: set raw HTML (use only with trusted content). */
+  setHTML(html) {
+    this.data.html = html;
+    this.data.text = undefined;
+    if (this._domRef) this._domRef.innerHTML = String(html);
+    return this;
+  }
+
+  /** Optional: get the live DOM node (or null if not rendered yet). */
+  getDOM() {
+    return this._domRef;
+  }
+
+/**
+   * Attach an onclick handler.
+   * @param {(ev: MouseEvent) => void} cb
+   */
+  onclick(cb) {
+    if (typeof cb !== "function") {
+      throw new Error("onclick: callback must be a function");
+    }
+    // If already rendered, attach immediately
+    if (this._domRef) {
+      this._domRef.addEventListener("click", cb);
+    }
+    // Also store it so that when we render later, we can attach again
+    this._onClickHandler = cb;
+    return this; // chainable
+  }
+
+  toDOM() {
+    const el = super.toDOM();
+    this._domRef = el;
+
+    if (this.data.html != null) {
+      el.innerHTML = String(this.data.html);
+    } else if (this.data.text != null) {
+      el.textContent = String(this.data.text);
+    }
+    if (this.data.attrs && typeof this.data.attrs === "object") {
+      for (const [k, v] of Object.entries(this.data.attrs)) {
+        el.setAttribute(k, v);
+      }
+    }
+
+    // re-attach onclick if one was registered before mount
+    if (this._onClickHandler) {
+      el.addEventListener("click", this._onClickHandler);
+    }
+
+    return el;
+  }
+
 }
 
 /** Container node with children */

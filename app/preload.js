@@ -71,9 +71,9 @@ const { EventEmitter } = require('events');
 function createEmitter() {
   const ee = new EventEmitter();
   return {
-    on(event, fn) {            // Persistent subscription
+    on(event, fn) {
       ee.on(event, fn);
-      return () => ee.off(event, fn); // Return an explicit unsubscribe function
+      return () => ee.off(event, fn);
     },
     off(event, fn) { ee.off(event, fn); },
     emit(event, ...args) { ee.emit(event, ...args); },
@@ -102,14 +102,12 @@ getPlugins().then(list => {
     // --- gateway sub-API ---
     static _gatewayEm = createEmitter();
     static gateway = {
-      // ✅ Persistent: fires for every message until you call the returned unsubscribe
       on_message(fn) {
         return BreadAPIClass._gatewayEm.on('message', fn);
       },
       off_message(fn) {
         BreadAPIClass._gatewayEm.off('message', fn);
       },
-      // Optional one-time helper (does not affect on_message behavior)
       once_message(fn) {
         const off = BreadAPIClass._gatewayEm.on('message', function handler(p) {
           off(); fn(p);
@@ -123,6 +121,18 @@ getPlugins().then(list => {
   ipcRenderer.on('discord-gateway-message', (_event, payload) => {
     BreadAPIClass._gatewayEm.emit('message', payload);
   });
+
+  BreadAPIClass.app = {
+    close() {
+      ipcRenderer.send('close');
+    },
+    maximize() {
+      ipcRenderer.send('maximize');
+    },
+    minimize() {
+      ipcRenderer.send('minimize');
+    },
+  };
 
   const BreadAPI = Object.freeze({
     version: BreadAPIClass.version,
@@ -138,6 +148,11 @@ getPlugins().then(list => {
       once_message: BreadAPIClass.gateway.once_message,
     }),
     plugins: BreadAPIClass.plugins,
+    app: Object.freeze({
+      close: BreadAPIClass.app.close,
+      maximize: BreadAPIClass.app.maximize,
+      minimize: BreadAPIClass.app.minimize,
+    }),
   });
 
   contextBridge.exposeInMainWorld('BreadAPI', BreadAPI);

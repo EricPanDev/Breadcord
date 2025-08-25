@@ -65,8 +65,7 @@ async function resolveLoadOrder(plugins) {
 
   for (const p of plugins) visit(p);
 
-  // No reverse: postorder already ensures deps come before dependents
-  return sorted;
+  return sorted.reverse();
 }
 
 BreadAPI.ready.then(async () => {
