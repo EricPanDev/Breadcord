@@ -77,6 +77,7 @@ body,
 [data-container-id="breadcord"],
 [data-container-id="breadcord-app"] {
   transition: background-color 1s ease, color 1s ease, border-color 1s ease;
+  overflow: hidden;
 }
 
 /* Light theme */
@@ -168,7 +169,6 @@ html.dark, body.dark {
   height: 100dvh;
   background: var(--color-background);
   border: 1px solid var(--color-muted);
-  border-radius: 10px;
   overflow: hidden;
   color: var(--color-text);
 }
