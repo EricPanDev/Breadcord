@@ -234,11 +234,13 @@ class UIContainer extends UINode {
     super(type, style);
     this.id = id;
     this.children = [];
+    this._domRef = null;       // HTMLElement after first toDOM()
   }
 
   /**
    * Add a child (UIElement or UIContainer).
    * Runs any registered before_dom_addition hooks for the CHILD's type.
+   * If this container is already rendered to DOM, the child will be immediately appended.
    * @param {UIElement|UIContainer} child
    */
   add(child) {
@@ -248,11 +250,18 @@ class UIContainer extends UINode {
     // call the public method to avoid TS18013
     BreadUI.runHooksFor(child, this);
     this.children.push(child);
+    
+    // If this container is already rendered to DOM, append the child immediately
+    if (this._domRef) {
+      this._domRef.appendChild(child.toDOM());
+    }
+    
     return this; // chainable
   }
 
   toDOM() {
     const el = super.toDOM();
+    this._domRef = el;
     el.dataset.containerId = this.id;
     for (const child of this.children) {
       el.appendChild(child.toDOM());
@@ -268,6 +277,11 @@ class UIContainer extends UINode {
     const root = typeof host === "string" ? document.querySelector(host) : host;
     if (!root) throw new Error("mount: host not found");
     root.appendChild(this.toDOM());
+  }
+
+  /** Optional: get the live DOM node (or null if not rendered yet). */
+  getDOM() {
+    return this._domRef;
   }
 }
 
