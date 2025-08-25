@@ -326,3 +326,4 @@ ipcMain.on('maximize', () => {
     }
   });
 });
+

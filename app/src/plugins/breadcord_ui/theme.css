@@ -1,7 +1,7 @@
 /* Ubuntu Regular */
 @font-face {
   font-family: 'Ubuntu';
-  src: url('styles/fonts/Ubuntu-Regular.ttf') format('truetype');
+  src: url('/styles/fonts/Ubuntu-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
 }
@@ -9,7 +9,7 @@
 /* Ubuntu Italic */
 @font-face {
   font-family: 'Ubuntu';
-  src: url('styles//fonts/Ubuntu-Italic.ttf') format('truetype');
+  src: url('/styles/fonts/Ubuntu-Italic.ttf') format('truetype');
   font-weight: 400;
   font-style: italic;
 }
@@ -17,7 +17,7 @@
 /* Ubuntu Bold */
 @font-face {
   font-family: 'Ubuntu';
-  src: url('styles//fonts/Ubuntu-Bold.ttf') format('truetype');
+  src: url('/styles/fonts/Ubuntu-Bold.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
 }
@@ -25,7 +25,7 @@
 /* Ubuntu Bold Italic */
 @font-face {
   font-family: 'Ubuntu';
-  src: url('styles//fonts/Ubuntu-BoldItalic.ttf') format('truetype');
+  src: url('/styles/fonts/Ubuntu-BoldItalic.ttf') format('truetype');
   font-weight: 700;
   font-style: italic;
 }
@@ -33,7 +33,7 @@
 /* Ubuntu Light */
 @font-face {
   font-family: 'Ubuntu';
-  src: url('styles//fonts/Ubuntu-Light.ttf') format('truetype');
+  src: url('/styles/fonts/Ubuntu-Light.ttf') format('truetype');
   font-weight: 300;
   font-style: normal;
 }
@@ -41,7 +41,7 @@
 /* Ubuntu Light Italic */
 @font-face {
   font-family: 'Ubuntu';
-  src: url('styles//fonts/Ubuntu-LightItalic.ttf') format('truetype');
+  src: url('/styles/fonts/Ubuntu-LightItalic.ttf') format('truetype');
   font-weight: 300;
   font-style: italic;
 }
@@ -49,7 +49,7 @@
 /* Ubuntu Medium */
 @font-face {
   font-family: 'Ubuntu';
-  src: url('styles//fonts/Ubuntu-Medium.ttf') format('truetype');
+  src: url('/styles/fonts/Ubuntu-Medium.ttf') format('truetype');
   font-weight: 500;
   font-style: normal;
 }
@@ -57,7 +57,7 @@
 /* Ubuntu Medium Italic */
 @font-face {
   font-family: 'Ubuntu';
-  src: url('styles//fonts/Ubuntu-MediumItalic.ttf') format('truetype');
+  src: url('/styles/fonts/Ubuntu-MediumItalic.ttf') format('truetype');
   font-weight: 500;
   font-style: italic;
 }
@@ -130,7 +130,7 @@ html.dark, body.dark {
 /* fixed server sidebar */
 [data-container-id="breadcord-server-container"] {
   flex: 0 0 60px;
-  background-color: black;
+  background-color: var(--color-background);
   overflow: auto;
 }
 
@@ -140,7 +140,7 @@ html.dark, body.dark {
   min-width: 150px;   /* prevent too small */
   max-width: 400px;   /* prevent too large */
   overflow: auto;
-  background-color: #2f3136;
+  background-color: var(--color-surface);
 }
 
 /* draggable divider */

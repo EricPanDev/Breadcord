@@ -1,0 +1,8 @@
+{
+    "id": "breadcache",
+    "name": "BreadCache",
+    "version": "1.0.0",
+    "description": "The default caching solution for Breadcord",
+    "github": "https://github.com/ericpandev/breadcord",
+    "dependencies": ["breadcore"]
+}

@@ -270,3 +270,10 @@ class UIContainer extends UINode {
     root.appendChild(this.toDOM());
   }
 }
+
+/**
+ *  Debug - Log WS to console
+ */
+BreadAPI.gateway.on_message((data) => {
+  console.log("[WS]", data);
+});
