@@ -4,5 +4,5 @@
     "version": "1.0.0",
     "description": "The default UI for Breadcord",
     "github": "https://github.com/ericpandev/breadcord",
-    "dependencies": ["breadcore"]
+    "dependencies": ["breadcore", "breadcache"]
 }

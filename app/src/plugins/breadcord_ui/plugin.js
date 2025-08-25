@@ -33,8 +33,10 @@ breadcordNav
   .add(nav_btn_fullscreen)
   .add(BreadUI.create_element("nav-text", {}, { text: "Breadcord" }))
 
+const breadcord_server_list = BreadUI.create_container("breadcord-server-container", "", {})
+
 breadcordApp
-  .add(BreadUI.create_container("breadcord-server-container", "vstack", {}))
+  .add(breadcord_server_list)
   .add(BreadUI.create_container("breadcord-channel-container", "vstack", {}))
   .add(BreadUI.create_container("breadcord-message-container", "vstack", {}))
   .add(BreadUI.create_container("breadcord-app-sidebar", "vstack", {}))
@@ -62,3 +64,29 @@ const link = document.createElement('link');
 link.rel = 'stylesheet';
 link.href = 'plugins/breadcord_ui/theme.css';
 document.head.appendChild(link);
+
+function sort_guilds(guilds) {
+  // todo
+  return guilds;
+}
+
+function get_guild_icon_url(guild) {
+  console.log(`https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png`)
+  return `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png`;
+}
+
+BreadCache.on_ready(() => {
+  console.log("[breadcord_ui] BreadCache Ready, beginning to load servers");
+  const sorted_guilds = sort_guilds(BreadCache.guilds);
+  for (const guild of sorted_guilds) {
+    if (guild.icon) {
+      const guild_btn = BreadUI.create_element(`guild-${guild.id}`, { backgroundImage: `url(${get_guild_icon_url(guild)})` }, {});
+      breadcord_server_list.add(guild_btn);
+    }
+    else {
+      const name = guild.name.split(/\s+/).map(w => w[0]).join("").toUpperCase().slice(0, 4);
+      const guild_btn = BreadUI.create_element(`guild-${guild.id}`, {}, { text: name });
+      breadcord_server_list.add(guild_btn);
+    }
+  }
+});

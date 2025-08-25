@@ -5,7 +5,7 @@
  * - Arrays are REPLACED by default; set arrays: "concat" | "unique" to change.
  * - IDs are explicit (first arg), not inferred from the object.
  */
-class BreadCache {
+class ObjectCache {
   /**
    * @param {Object} [opts]
    * @param {"replace"|"concat"|"unique"} [opts.arrays="replace"] - array merge strategy
@@ -21,7 +21,7 @@ class BreadCache {
   /** Get a value by ID. */
   get(id) {
     const v = this._map.get(id);
-    return this._clone ? BreadCache._clone(v) : v;
+    return this._clone ? ObjectCache._clone(v) : v;
   }
 
   /** Check if an ID exists. */
@@ -29,10 +29,10 @@ class BreadCache {
 
   /** Set/overwrite an ID with an object. */
   set(id, obj) {
-    if (!BreadCache._isObjectLike(obj)) {
+    if (!ObjectCache._isObjectLike(obj)) {
       throw new TypeError("BreadCache.set expects a plain object value");
     }
-    this._map.set(id, this._clone ? BreadCache._clone(obj) : obj);
+    this._map.set(id, this._clone ? ObjectCache._clone(obj) : obj);
     return this;
   }
 
@@ -42,18 +42,18 @@ class BreadCache {
    * @param {Object} patch - partial object to merge
    */
   update(id, patch) {
-    if (!BreadCache._isObjectLike(patch)) {
+    if (!ObjectCache._isObjectLike(patch)) {
       throw new TypeError("BreadCache.update expects a plain object patch");
     }
     const existing = this._map.get(id);
     if (!existing) {
       // create new
-      this._map.set(id, this._clone ? BreadCache._clone(patch) : { ...patch });
+      this._map.set(id, this._clone ? ObjectCache._clone(patch) : { ...patch });
       return this.get(id);
     }
-    const merged = BreadCache._merge(existing, patch, this._arrayStrategy);
+    const merged = ObjectCache._merge(existing, patch, this._arrayStrategy);
     this._map.set(id, merged);
-    return this._clone ? BreadCache._clone(merged) : merged;
+    return this._clone ? ObjectCache._clone(merged) : merged;
   }
 
   /** Delete by ID. */
@@ -68,13 +68,13 @@ class BreadCache {
   /** Get all entries as [id, value] tuples. */
   entries() {
     return Array.from(this._map.entries())
-      .map(([k, v]) => [k, this._clone ? BreadCache._clone(v) : v]);
+      .map(([k, v]) => [k, this._clone ? ObjectCache._clone(v) : v]);
   }
 
   /** Get all values. */
   values() {
     return Array.from(this._map.values())
-      .map(v => (this._clone ? BreadCache._clone(v) : v));
+      .map(v => (this._clone ? ObjectCache._clone(v) : v));
   }
 
   // --- internals ---
@@ -96,8 +96,8 @@ class BreadCache {
       const a = target[key];
       const b = patch[key];
 
-      if (BreadCache._isObjectLike(a) && BreadCache._isObjectLike(b)) {
-        BreadCache._merge(a, b, arrayStrategy);
+      if (ObjectCache._isObjectLike(a) && ObjectCache._isObjectLike(b)) {
+        ObjectCache._merge(a, b, arrayStrategy);
       } else if (Array.isArray(a) && Array.isArray(b)) {
         if (arrayStrategy === "concat") {
           target[key] = a.concat(b);
@@ -110,7 +110,7 @@ class BreadCache {
         }
       } else if (b !== undefined) {
         // primitives, nulls, arrays replacing non-arrays, etc.
-        target[key] = BreadCache._isObjectLike(b) || Array.isArray(b)
+        target[key] = ObjectCache._isObjectLike(b) || Array.isArray(b)
           ? JSON.parse(JSON.stringify(b))
           : b;
       }
@@ -128,11 +128,11 @@ class BreadCache {
 
 }
 
-const message_cache = new BreadCache({ arrays: "replace" });
-const user_cache = new BreadCache({ arrays: "replace" });
-const guild_cache = new BreadCache({ arrays: "replace" });
-const private_channels = new BreadCache({ arrays: "replace" }); // these are DMs
-const relationships = new BreadCache({ arrays: "replace" }); // these are friends, blocked, etc.
+const message_cache = new ObjectCache({ arrays: "replace" });
+const user_cache = new ObjectCache({ arrays: "replace" });
+const guild_cache = new ObjectCache({ arrays: "replace" });
+const private_channels = new ObjectCache({ arrays: "replace" }); // these are DMs
+const relationships = new ObjectCache({ arrays: "replace" }); // these are friends, blocked, etc.
 let user = null;
 
 BreadAPI.gateway.on_message((data) => {
@@ -152,5 +152,68 @@ BreadAPI.gateway.on_message((data) => {
     console.log("[BreadCache] Relationships Cached!");
     user = data.d.user;
     console.log("[BreadCache] User Cached!");
+
+    BreadCache.markReady();
   }
 });
+
+class BreadCache {
+
+  static #ready = false;
+  static #readyCallbacks = [];
+
+  static on_ready(fn) {
+    if (this.#ready) {
+      // already ready → fire immediately
+      fn();
+    } else {
+      // queue until ready
+      this.#readyCallbacks.push(fn);
+    }
+  }
+
+  static markReady() {
+    this.#ready = true;
+    for (const fn of this.#readyCallbacks) {
+      try { fn(); } catch (e) { console.error(e); }
+    }
+    this.#readyCallbacks = [];
+  }
+
+  static getMessage(id) { return message_cache.get(id); }
+  static getUser(id) { return user_cache.get(id); }
+  static getGuild(id) { return guild_cache.get(id); }
+  static getPrivateChannel(id) { return private_channels.get(id); }
+  static getRelationship(id) { return relationships.get(id); }
+  static getCurrentUser() { return user; }
+
+  static cacheMessage(msg) {
+    if (!msg || !msg.id) return;
+    message_cache.update(msg.id, msg);
+  }
+
+  static cacheUser(u) {
+    if (!u || !u.id) return;
+    user_cache.update(u.id, u);
+  }
+
+  static cacheGuild(g) {
+    if (!g || !g.id) return;
+    guild_cache.update(g.id, g);
+  }
+
+  static cachePrivateChannel(c) {
+    if (!c || !c.id) return;
+    private_channels.update(c.id, c);
+  }
+
+  static cacheRelationship(r) {
+    if (!r || !r.id) return;
+    relationships.update(r.id, r);
+  }
+
+  static get guilds() {
+    return guild_cache.values();
+  }
+}
+window.BreadCache = BreadCache;

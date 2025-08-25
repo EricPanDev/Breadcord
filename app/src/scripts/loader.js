@@ -1,5 +1,4 @@
 // Breadcord Plugin Loader
-const REQUIRED_PLUGINS = ["breadcore"]
 
 function load_plugin(plugin) {
   BreadAPI.info(`Loading plugin ${plugin}...`);
@@ -18,59 +17,93 @@ function load_plugin(plugin) {
   });
 }
 
-async function resolveLoadOrder(plugins) {
-  // Fetch metadata
-  const metas = await Promise.all(plugins.map(async (name) => {
-    const res = await fetch(`plugins/${name}/plugin.json`);
-    if (!res.ok) throw new Error(`Failed to load plugins/${name}/plugin.json (${res.status})`);
-    const json = await res.json();
-    const deps = Array.isArray(json.deps) ? json.deps : [];
-    return { name, deps };
-  }));
+// Node.js version (uses fs). If you need a browser/fetch version, see below.
 
-  // Only consider dependencies that are also in the input list
-  const pluginSet = new Set(plugins);
-  const depMap = new Map(
-    metas.map(({ name, deps }) => [name, deps.filter(d => pluginSet.has(d))])
-  );
+/**
+ * Determine a safe load order for BreadAPI.plugins so that dependencies load first.
+ * @param {string[]} pluginNames - e.g., BreadAPI.plugins
+ * @param {string} pluginsRoot - root folder that contains plugin directories
+ * @returns {Promise<string[]>} load order (deps first)
+ * @throws on missing plugin.json, missing dependency, or circular dependency
+ */
 
-  // (Optional) warn about missing deps that aren't in the list
-  for (const { name, deps } of metas) {
-    const missing = deps.filter(d => !pluginSet.has(d));
-    if (missing.length) {
-      console.warn(`Plugin "${name}" has missing deps not in load set: ${missing.join(', ')}`);
-      // If you prefer to be strict, replace the console.warn with:
-      // throw new Error(`Plugin "${name}" depends on missing plugins: ${missing.join(', ')}`);
+async function readPluginJson(pluginsRoot, name) {
+  const url = `${pluginsRoot}/${encodeURIComponent(name)}/plugin.json`;
+  let data;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    data = await res.json();
+  } catch (err) {
+    throw new Error(`Missing or invalid plugin.json for "${name}" at ${url}: ${err.message}`);
+  }
+  const id = data.id || name;
+  const deps = Array.isArray(data.dependencies) ? data.dependencies : [];
+  return { id, name: id, deps };
+}
+
+async function determinePluginLoadOrder(pluginNames, pluginsRoot = 'plugins') {
+  // Read all plugin.json files for the declared plugins
+  const uniqueNames = Array.from(new Set(pluginNames));
+  const metaByName = new Map();
+  for (const n of uniqueNames) {
+    const meta = await readPluginJson(pluginsRoot, n);
+    metaByName.set(meta.name, meta);
+  }
+
+  // Validate: every declared dependency must be present among plugins
+  for (const { name, deps } of metaByName.values()) {
+    for (const d of deps) {
+      if (!metaByName.has(d)) {
+        // Helpful hint: show where we looked
+        const jsonPath = path.join(pluginsRoot, d, 'plugin.json');
+        throw new Error(
+          `Plugin "${name}" depends on "${d}", but "${d}" is not in BreadAPI.plugins or ${jsonPath} is missing.`
+        );
+      }
     }
   }
 
-  const sorted = [];
-  const temp = new Set();   // for cycle detection (DFS stack)
-  const perm = new Set();   // permanently visited
+  // Topological sort (DFS with cycle detection)
+  const VISIT = { UNVISITED: 0, VISITING: 1, DONE: 2 };
+  const state = new Map(Array.from(metaByName.keys()).map((k) => [k, VISIT.UNVISITED]));
+  const order = [];
 
-  function visit(n) {
-    if (perm.has(n)) return;
-    if (temp.has(n)) {
-      // Build a readable cycle string
-      const stack = [...temp, n];
-      throw new Error(`Circular dependency detected: ${stack.join(' -> ')}`);
+  function dfs(node, stack) {
+    const s = state.get(node);
+    if (s === VISIT.DONE) return;
+    if (s === VISIT.VISITING) {
+      // cycle: reconstruct a readable path
+      const cycleStartIdx = stack.indexOf(node);
+      const cyclePath = [...stack.slice(cycleStartIdx), node].join(' -> ');
+      throw new Error(`Circular dependency detected: ${cyclePath}`);
     }
-    temp.add(n);
-    const deps = depMap.get(n) || [];
-    for (const d of deps) visit(d);
-    temp.delete(n);
-    perm.add(n);
-    sorted.push(n); // postorder: deps get pushed first
+    state.set(node, VISIT.VISITING);
+    stack.push(node);
+
+    const deps = metaByName.get(node)?.deps || [];
+    for (const d of deps) dfs(d, stack);
+
+    stack.pop();
+    state.set(node, VISIT.DONE);
+    order.push(node); // post-order: node after its deps
   }
 
-  for (const p of plugins) visit(p);
+  // Sort keys for deterministic output, then DFS
+  const all = Array.from(metaByName.keys()).sort();
+  for (const n of all) {
+    if (state.get(n) === VISIT.UNVISITED) dfs(n, []);
+  }
 
-  return sorted.reverse();
+  // 'order' currently has deps before dependents, which is what we want.
+  // However, if you prefer preserving only declared plugins (in case of extra metadata),
+  // filter to the original set (by name/id equivalence).
+  return order.filter((n) => metaByName.has(n));
 }
 
 BreadAPI.ready.then(async () => {
   BreadAPI.info('Breadcord ready, found ' + BreadAPI.plugins.length + ' plugin(s): ' + BreadAPI.plugins.join(', '));
-  const loadOrder = await resolveLoadOrder(BreadAPI.plugins);
+  const loadOrder = (await determinePluginLoadOrder(BreadAPI.plugins));
   BreadAPI.info('Resolved load order: ' + loadOrder.join(', '));
   for (const plugin of loadOrder) {
     await load_plugin(plugin);
