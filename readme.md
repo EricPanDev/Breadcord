@@ -26,6 +26,23 @@ Complete documentation is available in the [docs/](docs/) folder:
 - **[API Reference](docs/api-reference.md)** - BreadAPI documentation
 - **[Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
 
+## Development Status
+- [x] ~~Discord Authentication~~  
+- [x] ~~Plugin System~~  
+- [x] ~~Object Caching~~  
+- [x] ~~Guild Enumeration~~  
+- [ ] Channel List
+- [ ] Message UI
+- [ ] Members List
+- [ ] User Settings
+- [ ] Guild Settings
+- [ ] Interactions
+- [ ] VC Support
+- [ ] DM Support
+- [ ] Notification System
+- [ ] Search Support
+- [ ] Threads Support
+
 # Automatic Builds
 > [!WARNING]  
 > **Windows** - These builds are not signed with a paid certificate, so they may trigger SmartScreen. This is safe to ignore.<br>**MacOS** - You will need to approve the app in settings or it will show as "Damaged"
