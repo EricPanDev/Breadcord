@@ -65,6 +65,10 @@
 :root {
   --breadcord-nav-height: 32px;
   --font-family: 'Ubuntu', sans-serif;
+  --breadcord-channel-container-width: 240px;
+  --breadcord-server-container-width: 60px;
+  --user-corner-profile-card-height: 56px;
+  --color-faded:rgba(218, 218, 218, 0.9);
 }
 
 * {
@@ -82,20 +86,20 @@ body,
 
 /* Light theme */
 html.light, body.light {
-  --color-background: #faf7f2;
-  --color-surface:    #f3eadf;
-  --color-primary:    #c68a4a;
-  --color-secondary:  #a86b39;
-  --color-accent:     #7d4e2f;
-  --color-contrast:   #3f2a1d;
-  --color-dark:       #231a14;
-  --color-highlight:  #fff1cc;
-  --color-muted:      #d8cbb8;
-  --color-muted-secondary:     #c7b59a;
-  --color-text:       #2b2118;
-  --color-nav-text:   #cdaa7f;
-  --color-nav-btn:    #cdaa7f;
-  --color-nav-highlight: rgb(232, 216, 196);
+  --color-background:       #faf7f2;
+  --color-surface:          #f3eadf;
+  --color-primary:          #c68a4a;
+  --color-secondary:        #a86b39;
+  --color-accent:           #7d4e2f;
+  --color-contrast:         #3f2a1d;
+  --color-dark:             #231a14;
+  --color-highlight:        #fff1cc;
+  --color-muted:            #d8cbb8;
+  --color-muted-secondary:  #c7b59a;
+  --color-text:             #2b2118;
+  --color-nav-text:         #cdaa7f;
+  --color-nav-btn:          #cdaa7f;
+  --color-nav-highlight:    rgb(232, 216, 196);
 }
 
 /* Dark theme */
@@ -131,18 +135,20 @@ html.dark, body.dark {
 
 /* fixed server sidebar */
 [data-container-id="breadcord-server-container"] {
-  width: 60px;
+  width: var(--breadcord-server-container-width);
   background-color: var(--color-background);
   display: block;
   display: block;
   position: relative;
   top: 50%;
   transform: translateY(-50%);
-  overflow: auto;
+  overflow-y: auto;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE/Edge */
   padding: 10px;
   box-sizing: border-box;
+  overflow-x: hidden;
+  padding-bottom: calc(var(--user-corner-profile-card-height) + 10px)
 }
 [data-container-id="breadcord-server-container"]::-webkit-scrollbar {
   display: none; /* Chrome/Safari */
@@ -150,7 +156,7 @@ html.dark, body.dark {
 
 /* channel list with resizable handle */
 [data-container-id="breadcord-channel-container"] {
-  flex: 0 0 240px;
+  flex: 0 0 var(--breadcord-channel-container-width);
   min-width: 150px;   /* prevent too small */
   max-width: 400px;   /* prevent too large */
   overflow: auto;
@@ -381,4 +387,116 @@ html.dark, body.dark {
   overflow: auto;
   background: var(--color-background);
   color: var(--color-text);
+}
+
+[data-container-id="user-corner-profile-card"] {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  width: calc(var(--breadcord-channel-container-width) + var(--breadcord-server-container-width) - 16px);
+  border-radius: 5px;
+  background-color: var(--color-muted-secondary);
+  height: var(--user-corner-profile-card-height);
+  box-sizing: border-box;
+
+  background-size: auto 100%;
+  background-repeat: no-repeat;
+  background-position: right center;
+}
+
+[data-container-id="user-corner-profile-card-avatar"] {
+  position: absolute;
+  height: calc(var(--user-corner-profile-card-height) - 18px);
+  width: calc(var(--user-corner-profile-card-height) - 18px);
+  left: 9px;
+  top: 9px;
+
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  border-radius: 50%;
+}
+[data-container-id="user-corner-profile-card-avatar-decoration"] {
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  border-radius: 0;
+  height: calc(var(--user-corner-profile-card-height) - 10px);
+  width: calc(var(--user-corner-profile-card-height) - 10px);
+  position: relative;
+  top: -4px;
+  left: -4px;
+}
+[data-container-id="user-corner-profile-card-text"] {
+  height: calc(var(--user-corner-profile-card-height) - 18px);
+  width: 150px;
+  position: absolute;
+  top: calc((var(--user-corner-profile-card-height) - calc(var(--user-corner-profile-card-height) - 18px)) / 2);
+  left: calc(var(--user-corner-profile-card-height) - 10px + 9px);
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* centers vertically */
+}
+[data-type="user-corner-profile-card-text-name"] {
+  color: var(--color-text);
+  font-weight: 500;
+  font-size: 14px;
+}
+[data-type="user-corner-profile-card-text-status"] {
+  color: var(--color-highlight);
+  font-weight: 300;
+  font-size: 11px;
+}
+[data-type="user-corner-profile-card-settings-btn"] {
+  position: absolute;
+  right: 8px;
+  top: calc((var(--user-corner-profile-card-height) - 30px) / 2);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  box-sizing: border-box;
+  border-radius: 5px;
+  fill: var(--color-faded);
+  transition: background-color 0.1s ease;
+}
+
+[data-type="user-corner-profile-card-settings-btn"] svg {
+  width: 100%;
+  height: 100%;
+  display: block;                 /* avoid inline whitespace wiggles */
+  transition: transform 0.3s ease;
+  transform-origin: center;       /* <-- important */
+  transform-box: fill-box;        /* <-- important for SVGs */
+}
+
+[data-type="user-corner-profile-card-settings-btn"]:hover {
+  cursor: pointer;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-type="user-corner-profile-card-settings-btn"]:hover svg {
+  transform: rotate(180deg);
+}
+
+[data-type="user-corner-profile-card-plugins-btn"] {
+  position: absolute;
+  right: calc(8px + 30px + 5px);
+  top: calc((var(--user-corner-profile-card-height) - 30px) / 2);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border-radius: 5px;
+  fill: var(--color-faded);
+  transition: background-color 0.1s ease;
+}
+[data-type="user-corner-profile-card-plugins-btn"]:hover {
+  cursor: pointer;
+  background-color: rgba(255, 255, 255, 0.2);
 }

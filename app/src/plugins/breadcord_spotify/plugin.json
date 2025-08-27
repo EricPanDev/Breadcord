@@ -2,7 +2,7 @@
     "id": "breadcord_spotify",
     "name": "Breadcord Spotify",
     "version": "1.0.0",
-    "description": "Spotify integration for Breadcord",
+    "description": "Spotify integration for Breadcord. Does not provide a UI, only the backend functionality.",
     "github": "https://github.com/ericpandev/breadcord",
     "dependencies": ["breadcache"]
 }
