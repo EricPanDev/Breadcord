@@ -150,6 +150,11 @@ html.dark, body.dark {
   overflow-x: hidden;
   padding-bottom: calc(var(--user-corner-profile-card-height) + 10px)
 }
+
+/* Adjust server container padding when Spotify UI is active */
+.spotify-ui-active [data-container-id="breadcord-server-container"] {
+  padding-bottom: calc(var(--user-corner-profile-card-height) + 48px + 18px)
+}
 [data-container-id="breadcord-server-container"]::-webkit-scrollbar {
   display: none; /* Chrome/Safari */
 }
@@ -402,6 +407,11 @@ html.dark, body.dark {
   background-size: auto 100%;
   background-repeat: no-repeat;
   background-position: right center;
+}
+
+/* When Spotify UI is active, make profile card corners square on top */
+.spotify-ui-active [data-container-id="user-corner-profile-card"] {
+  border-radius: 0 0 5px 5px;
 }
 
 [data-container-id="user-corner-profile-card-avatar"] {
