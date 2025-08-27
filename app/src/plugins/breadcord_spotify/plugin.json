@@ -1,0 +1,8 @@
+{
+    "id": "breadcord_spotify",
+    "name": "Breadcord Spotify",
+    "version": "1.0.0",
+    "description": "Spotify integration for Breadcord",
+    "github": "https://github.com/ericpandev/breadcord",
+    "dependencies": ["breadcache"]
+}
