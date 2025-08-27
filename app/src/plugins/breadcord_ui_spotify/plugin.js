@@ -1,74 +1,84 @@
 // --- COMPACT live UI (no preview), narrow width, text labels ---------------
 function mountLiveSpotifyUI(player) {
-  const host = document.querySelector('[data-container-id="breadcord-message-container"][data-type="vstack"]');
+  // Position above the user corner profile card
+  const host = document.body;
   if (!host) return console.error("Container not found");
 
-  // Card
+  // Card - connected to the top of user profile card with ultra-compact design
   const card = document.createElement("div");
   card.style.cssText = `
-    display:flex; gap:8px; align-items:center;
-    padding:8px; border:1px solid #e5e7eb;
-    border-radius:10px; background:#fff;
-    box-shadow:0 1px 4px rgba(0,0,0,0.05);
-    max-width:480px; width:100%;
+    position: absolute;
+    left: 8px;
+    bottom: calc(var(--user-corner-profile-card-height) + 8px);
+    width: calc(var(--breadcord-channel-container-width) + var(--breadcord-server-container-width) - 16px);
+    height: 32px;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 4px;
+    border: 1px solid var(--color-muted);
+    border-bottom: none;
+    border-radius: 5px 5px 0 0;
+    background: var(--color-muted-secondary);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-sizing: border-box;
   `;
 
   const cover = document.createElement("img");
-  cover.style.cssText = "width:60px; height:60px; border-radius:8px; object-fit:cover; background:#f3f4f6;";
+  cover.style.cssText = "width:24px; height:24px; border-radius:3px; object-fit:cover; background:#f3f4f6;";
 
   const meta = document.createElement("div");
-  meta.style.cssText = "display:flex; flex-direction:column; gap:6px; flex:1; min-width:0;";
+  meta.style.cssText = "display:flex; flex-direction:column; gap:1px; flex:1; min-width:0;";
 
   const title = document.createElement("div");
-  title.style.cssText = "font-weight:700; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;";
+  title.style.cssText = "font-weight:600; font-size:9px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--color-text);";
 
   const author = document.createElement("div");
-  author.style.cssText = "color:#6b7280; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;";
-
-  const device = document.createElement("div");
-  device.style.cssText = "color:#9ca3af; font-size:10px;";
+  author.style.cssText = "color:var(--color-text-muted); font-size:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;";
 
   const barRow = document.createElement("div");
-  barRow.style.cssText = "display:flex; align-items:center; gap:6px;";
+  barRow.style.cssText = "display:flex; align-items:center; gap:3px;";
 
   const elapsed = document.createElement("span");
-  elapsed.style.cssText = "font-variant-numeric: tabular-nums; font-size:10px; color:#6b7280; width:34px; text-align:right;";
+  elapsed.style.cssText = "font-variant-numeric: tabular-nums; font-size:7px; color:var(--color-text-muted); width:24px; text-align:right;";
   const duration = document.createElement("span");
-  duration.style.cssText = "font-variant-numeric: tabular-nums; font-size:10px; color:#6b7280; width:34px;";
+  duration.style.cssText = "font-variant-numeric: tabular-nums; font-size:7px; color:var(--color-text-muted); width:24px;";
 
   const progress = document.createElement("input");
   progress.type = "range";
   progress.min = 0;
   progress.max = 1000;
   progress.value = 0;
-  progress.style.cssText = "flex:1; accent-color:#10b981; height:4px;";
+  progress.style.cssText = "flex:1; accent-color:var(--color-highlight); height:1px;";
 
   const controls = document.createElement("div");
-  controls.style.cssText = "display:flex; align-items:center; gap:4px;";
+  controls.style.cssText = "display:flex; align-items:center; gap:1px; flex-shrink:0;";
 
   // Compact text buttons (no funky unicode)
-  const btnPrev = button("Prev");
-  const btnPlayPause = button("Play");
-  const btnNext = button("Next");
+  const btnPrev = button("‹");
+  const btnPlayPause = button("▶");
+  const btnNext = button("›");
 
   function button(label) {
     const b = document.createElement("button");
     b.textContent = label;
     b.style.cssText = `
-      padding:4px 8px;
-      border-radius:6px;
-      border:1px solid #e5e7eb;
-      background:#f9fafb;
-      font-size:11px;
+      padding:1px 2px;
+      border-radius:2px;
+      border:1px solid var(--color-muted);
+      background:var(--color-surface);
+      font-size:8px;
       cursor:pointer;
       line-height:1;
-      min-width:auto;
+      min-width:16px;
+      height:14px;
+      color:var(--color-text);
     `;
     return b;
   }
 
   barRow.append(elapsed, progress, duration);
-  meta.append(title, author, device, barRow);
+  meta.append(title, author, barRow);
   controls.append(btnPrev, btnPlayPause, btnNext);
 
   card.append(cover, meta, controls);
@@ -117,10 +127,9 @@ function mountLiveSpotifyUI(player) {
     cover.alt = player.track.name || "Album cover";
     title.textContent = player.track.name ?? "—";
     author.textContent = player.track.author ?? "";
-    device.textContent = player.deviceName ? `Device: ${player.deviceName}` : "";
   }
   function paintState() {
-    btnPlayPause.textContent = player.state === "playing" ? "Pause" : "Play";
+    btnPlayPause.textContent = player.state === "playing" ? "⏸" : "▶";
   }
   function paintProgress() {
     const total = player.track.duration || 0;
