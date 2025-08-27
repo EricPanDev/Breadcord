@@ -29,6 +29,8 @@ function handle_ws(token) {
     console.error('[unhandledRejection]', err);
   });
 
+
+  ipcMain.handle('websocket:reconnect', async () => reconnect());
   connect();
 
   function connect() {

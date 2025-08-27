@@ -4,6 +4,22 @@ async function getPlugins() {
   return await ipcRenderer.invoke('plugins:list');
 }
 
+async function reconnect_ws() {
+  return await ipcRenderer.invoke('websocket:reconnect');
+}
+
+window.addEventListener('keydown', async (e) => {
+  // You can customize the reload key, e.g. F5 or Ctrl+R
+  if (
+    (e.key === 'F5') ||
+    (e.key === 'r' && (e.ctrlKey || e.metaKey))
+  ) {
+    e.preventDefault();
+    await reconnect_ws();
+    window.location.reload();
+  }
+});
+
 function fetch_token() {
     const iframe = document.createElement('iframe');
             

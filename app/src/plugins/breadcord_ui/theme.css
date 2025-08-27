@@ -138,9 +138,14 @@ html.dark, body.dark {
   position: relative;
   top: 50%;
   transform: translateY(-50%);
-  overflow: scroll;
+  overflow: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
   padding: 10px;
   box-sizing: border-box;
+}
+[data-container-id="breadcord-server-container"]::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }
 
 /* channel list with resizable handle */
