@@ -65,9 +65,18 @@ link.rel = 'stylesheet';
 link.href = 'plugins/breadcord_ui/theme.css';
 document.head.appendChild(link);
 
-function sort_guilds(guilds) {
-  // todo
-  return guilds;
+function fetch_sorted_guilds() {
+  const user_guild_prefs = BreadCache.user_settings.guild_folders;
+  console.log("USER SETTINGS", BreadCache.user_settings)
+  var guild_order = [];
+  for (const folder of user_guild_prefs) {
+    if (folder.guild_ids.length === 1) {
+      guild_order.push(folder.guild_ids[0]);
+    } else if (folder.guild_ids.length > 1) {
+      guild_order.push(folder);
+    }
+  }
+  return guild_order;
 }
 
 function get_guild_icon_url(guild) {
@@ -77,16 +86,101 @@ function get_guild_icon_url(guild) {
 
 BreadCache.on_ready(() => {
   console.log("[breadcord_ui] BreadCache Ready, beginning to load servers");
-  const sorted_guilds = sort_guilds(BreadCache.guilds);
-  for (const guild of sorted_guilds) {
-    if (guild.icon) {
-      const guild_btn = BreadUI.create_element(`guild-${guild.id}`, { backgroundImage: `url(${get_guild_icon_url(guild)})` }, {});
-      breadcord_server_list.add(guild_btn);
-    }
-    else {
-      const name = guild.name.split(/\s+/).map(w => w[0]).join("").toUpperCase().slice(0, 4);
-      const guild_btn = BreadUI.create_element(`guild-${guild.id}`, {}, { text: name });
-      breadcord_server_list.add(guild_btn);
+  const sorted_guilds = fetch_sorted_guilds();
+  console.log(sorted_guilds)
+
+  // helper to attach toggle behavior to a folder element
+  const attachFolderToggle = (folder) => {
+    if (!folder) return;
+
+    const setA11y = () => {
+      const open = folder.classList.contains('is-open');
+      folder.setAttribute('role', 'button');
+      folder.setAttribute('tabindex', '0');
+      folder.setAttribute('aria-expanded', open ? 'true' : 'false');
+    };
+
+    const open = () => { folder.classList.add('is-open'); setA11y(); };
+    const close = () => { folder.classList.remove('is-open'); setA11y(); };
+    const toggle = () => { folder.classList.toggle('is-open'); setA11y(); };
+
+    setA11y();
+
+    // Click to open; click background to close when open
+    folder.addEventListener('click', (e) => {
+      if (!folder.classList.contains('is-open')) {
+        e.preventDefault();
+        e.stopPropagation();
+        open();
+      } else if (e.target === folder) {
+        // only collapse if clicking the empty area of the folder, not a child icon
+        close();
+      }
+    });
+
+    // Keyboard toggle (Enter / Space)
+    folder.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggle();
+      }
+    });
+
+    // Click outside to close (optional but nice)
+    document.addEventListener('click', (e) => {
+      if (folder.classList.contains('is-open') && !folder.contains(e.target)) {
+        close();
+      }
+    });
+  };
+
+  for (const guild_id of sorted_guilds) {
+    if (typeof guild_id === 'object' && !Array.isArray(guild_id) && guild_id !== null) {
+      const guild_ids = guild_id.guild_ids;
+      var style = {};
+      var expand_style = {};
+      if (guild_id.color) {
+        style.backgroundColor = `#${guild_id.color.toString(16).padStart(6, '0')}4D`;
+        expand_style.color = `#${guild_id.color.toString(16).padStart(6, '0')}FF`;
+      }
+
+      // Create folder container
+      const folder_container = BreadUI.create_container(`guild-folder-${guild_id.id}`, "", style);
+
+      const expand_btn = BreadUI.create_element(`guild-folderexpand-${guild_id.id}`, expand_style, {html: `<svg aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M2 5a3 3 0 0 1 3-3h3.93a2 2 0 0 1 1.66.9L12 5h7a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V5Z" class=""></path></svg>`});
+      folder_container.add(expand_btn);
+
+      // Add each guild inside the folder
+      for (const g_id of guild_ids) {
+        const guild = BreadCache.getGuild(g_id);
+        if (guild.icon) {
+          const guild_btn = BreadUI.create_element(`guild-${guild.id}`, { backgroundImage: `url(${get_guild_icon_url(guild)})` }, {});
+          folder_container.add(guild_btn);
+        } else {
+          const name = guild.name.split(/\s+/).map(w => w[0]).join("").toUpperCase().slice(0, 4);
+          const guild_btn = BreadUI.create_element(`guild-${guild.id}`, {}, { text: name });
+          folder_container.add(guild_btn);
+        }
+      }
+
+      // Insert into the server list
+      breadcord_server_list.add(folder_container);
+
+      // Attach toggle behavior to this specific folder DOM node
+      const folder = document.querySelector(`[data-container-id="guild-folder-${guild_id.id}"]`);
+      attachFolderToggle(folder);
+
+    } else {
+      // Single (non-folder) guilds
+      const guild = BreadCache.getGuild(guild_id);
+      if (guild.icon) {
+        const guild_btn = BreadUI.create_element(`guild-${guild.id}`, { backgroundImage: `url(${get_guild_icon_url(guild)})` }, {});
+        breadcord_server_list.add(guild_btn);
+      } else {
+        const name = guild.name.split(/\s+/).map(w => w[0]).join("").toUpperCase().slice(0, 4);
+        const guild_btn = BreadUI.create_element(`guild-${guild.id}`, {}, { text: name });
+        breadcord_server_list.add(guild_btn);
+      }
     }
   }
 });

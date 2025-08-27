@@ -91,6 +91,7 @@ html.light, body.light {
   --color-dark:       #231a14;
   --color-highlight:  #fff1cc;
   --color-muted:      #d8cbb8;
+  --color-muted-secondary:     #c7b59a;
   --color-text:       #2b2118;
   --color-nav-text:   #cdaa7f;
   --color-nav-btn:    #cdaa7f;
@@ -108,6 +109,7 @@ html.dark, body.dark {
   --color-dark:       #f0d9b5;  /* pale wheat for highlights */
   --color-highlight:  #f3eadf;  /* gentle highlight bg */
   --color-muted:      #3c2f26;  /* low-contrast border */
+  --color-muted-secondary:     rgb(68, 55, 46);  /* low-contrast border */
   --color-text:       #f5efe7;  /* warm near-white */
   --color-nav-text:   #a08a71;  /* amber for nav text */
   --color-nav-btn:    #a08a71;  /* amber for nav buttons */
@@ -137,7 +139,7 @@ html.dark, body.dark {
   top: 50%;
   transform: translateY(-50%);
   overflow: scroll;
-  padding: 6px;
+  padding: 10px;
   box-sizing: border-box;
 }
 
@@ -165,21 +167,126 @@ html.dark, body.dark {
   background-color: var(--color-background);
 }
 
+/* Base guild icon styling */
 [data-type^="guild-"] {
   background-size: cover;
   background-position: center;
   border-radius: 8px;
-  height: 48px;
+  height: 40px;
+  width: 40px;
   margin-bottom: 8px;
-  width: 48px;
   text-align: center;
-  background-color: var(--color-muted);
-  /* center text vertically */
-  line-height: 48px;
+  background-color: var(--color-muted-secondary);
+  font-weight: 500;
+  cursor: pointer;
   overflow: hidden;
   font-size: 14px;
-  cursor: pointer;
-  font-weight: 500;
+  line-height: 40px; /* centers text for normal guilds */
+}
+
+/* Base guild icon styling */
+[data-type^="guild-folderexpand-"] {
+  background-size: cover;
+  background-position: center;
+  border-radius: 8px;
+  height: 40px;
+  width: 40px;
+  margin-bottom: 8px;
+  background-color: transparent;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding-top: 11px;
+  pointer-events: none !important;
+  margin-bottom: 8px !important;
+  margin-top: 8px !important;
+  color: var(--color-text);
+}
+
+/* Adjust for iconless guilds (no background-image set) */
+[data-type^="guild-"]:not([style*="background-image"]) {
+  font-size: 12px;      /* smaller text */
+  line-height: 1.2;     /* normal text line height */
+  display: flex;        /* flexbox centering */
+  align-items: center;
+  justify-content: center;
+}
+
+/* COLLAPSED: 2×2 mini grid */
+[data-container-id^="guild-folder-"] {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  overflow: hidden;
+  gap: 2px;
+  box-sizing: border-box;
+  padding: 2px;
+  margin-bottom: 8px; /* folder gap requested */
+  cursor: pointer;    /* looks clickable */
+  margin-left: -2px;
+  margin-right: -2px;
+  padding-left: 2px !important;
+  background-color: var(--color-muted);
+}
+
+/* mini icons in folder */
+[data-container-id^="guild-folder-"] > [data-type^="guild-"] {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  line-height: 1;
+  font-size: 10px;   /* smaller text inside folder */
+  border-radius: 6px;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+}
+
+/* --- Collapsed visibility rules: show 2–5, hide 1 and 6+ --- */
+[data-container-id^="guild-folder-"] > :nth-child(1) {
+  display: none !important;     /* hide the first icon */
+}
+[data-container-id^="guild-folder-"] > :nth-child(n+6) {
+  display: none !important;     /* hide 6th and beyond */
+}
+
+/* While collapsed, disable child clicks to avoid accidental navigation */
+[data-container-id^="guild-folder-"]:not(.is-open) > [data-type^="guild-"] {
+  pointer-events: none;
+}
+
+/* EXPANDED: restore “normal” vertical list */
+[data-container-id^="guild-folder-"].is-open {
+  display: block;       /* stack children vertically */
+  width: auto;
+  height: auto;
+  padding: 0;
+  gap: 0;
+  overflow: visible;
+}
+
+/* Expanded: show everything, including the first and 6+ */
+[data-container-id^="guild-folder-"].is-open > :nth-child(1),
+[data-container-id^="guild-folder-"].is-open > :nth-child(n+6) {
+  display: block !important;
+}
+
+/* restore normal guild sizing & spacing when open */
+[data-container-id^="guild-folder-"].is-open > [data-type^="guild-"] {
+  width: 40px;
+  height: 40px;
+  margin: 0 0 8px 0;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 40px; /* center text on normal icons */
+  pointer-events: auto; /* re-enable clicks on items */
+}
+
+/* optional: nicer hover when open */
+[data-container-id^="guild-folder-"].is-open > [data-type^="guild-"]:hover {
+  filter: brightness(1.08);
 }
 
 [data-container-id="breadcord-app-sidebar"] {

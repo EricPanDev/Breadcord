@@ -133,6 +133,7 @@ const user_cache = new ObjectCache({ arrays: "replace" });
 const guild_cache = new ObjectCache({ arrays: "replace" });
 const private_channels = new ObjectCache({ arrays: "replace" }); // these are DMs
 const relationships = new ObjectCache({ arrays: "replace" }); // these are friends, blocked, etc.
+let user_settings = null;
 let user = null;
 
 BreadAPI.gateway.on_message((data) => {
@@ -150,8 +151,12 @@ BreadAPI.gateway.on_message((data) => {
       relationships.update(relation.id, relation);
     }
     console.log("[BreadCache] Relationships Cached!");
-    user = data.d.user;
+    
+    BreadCache.user = data.d.user;
     console.log("[BreadCache] User Cached!");
+
+    BreadCache.user_settings = data.d.user_settings;
+    console.log("[BreadCache] User Settings Cached!", user_settings);
 
     BreadCache.markReady();
   }
