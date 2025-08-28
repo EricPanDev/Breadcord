@@ -34,10 +34,15 @@ breadcordNav
   .add(BreadUI.create_element("nav-text", {}, { text: "Breadcord" }))
 
 const breadcord_server_list = BreadUI.create_container("breadcord-server-container", "", {})
+const breadcord_channel_list = BreadUI.create_container("breadcord-channel-container", "vstack", {})
+
+breadcord_channel_list
+  .add(BreadUI.create_element("nav-current-location", "", { text: "Direct Messages" }))
+  .add(BreadUI.create_container("sidebar-channels-list", "", {}))
 
 breadcordApp
   .add(breadcord_server_list)
-  .add(BreadUI.create_container("breadcord-channel-container", "vstack", {}))
+  .add(breadcord_channel_list)
   .add(BreadUI.create_container("breadcord-message-container", "vstack", {}))
   .add(BreadUI.create_container("breadcord-app-sidebar", "vstack", {}))
 
@@ -79,8 +84,162 @@ function fetch_sorted_guilds() {
 }
 
 function get_guild_icon_url(guild) {
-  console.log(`https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png`)
   return `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png`;
+}
+
+// Voice channels are always last when under a category
+function sort_channels(channels) {
+  const arr = Array.isArray(channels) ? channels : Array.from(channels.values?.() ?? channels);
+  if (arr.length === 0) return arr;
+
+  // Helpers that work for both discord.js and raw gateway payloads
+  const getPos = ch => (ch.rawPosition ?? ch.position ?? 0);
+  const getParentId = ch => (ch.parentId ?? ch.parent_id ?? null);
+  const hasCmp = (a, b) =>
+    typeof a?.comparePositionTo === 'function' && typeof b?.comparePositionTo === 'function';
+
+  // Category = type 4 (or old string enum)
+  const isCategory = ch =>
+    ch?.type === 4 || ch?.type === 'GUILD_CATEGORY';
+
+  // Voice-like channels: voice (2) + stage (13) or old string enums
+  const isVoice = ch =>
+    ch?.type === 2 || ch?.type === 'GUILD_VOICE' ||
+    ch?.type === 13 || ch?.type === 'GUILD_STAGE_VOICE';
+
+  const nameCmp = (a, b) => (a.name || '').localeCompare(b.name || '');
+  const idCmp   = (a, b) => (a.id > b.id ? 1 : -1);
+  const baseCmp = (a, b) => getPos(a) - getPos(b) || nameCmp(a, b) || idCmp(a, b);
+
+  // Prefer discord.js comparator when available
+  const djCmp = (a, b) => (hasCmp(a, b) ? a.comparePositionTo(b) : baseCmp(a, b));
+
+  // Build a quick index by id
+  const byId = new Map(arr.map(ch => [ch.id, ch]));
+
+  // Top-level = categories OR channels with no parent
+  const topLevel = arr
+    .filter(ch => isCategory(ch) || !getParentId(ch))
+    .sort(djCmp);
+
+  // Index children by parent
+  const childrenByParent = new Map();
+  for (const ch of arr) {
+    const pid = getParentId(ch);
+    if (!pid) continue;
+    if (!childrenByParent.has(pid)) childrenByParent.set(pid, []);
+    childrenByParent.get(pid).push(ch);
+  }
+
+  // Sort each parent's children
+  for (const [pid, list] of childrenByParent) {
+    const parent = byId.get(pid);
+
+    // Inside categories: voice (and stage) always last
+    if (isCategory(parent)) {
+      list.sort((a, b) => {
+        const va = !!isVoice(a), vb = !!isVoice(b);
+        if (va !== vb) return va ? 1 : -1; // non-voice before voice
+        return djCmp(a, b);                 // otherwise normal order
+      });
+    } else {
+      // Non-category parents: keep normal order
+      list.sort(djCmp);
+    }
+  }
+
+  // Stitch final order: top-level interleaved by position; each category followed by its children
+  const out = [];
+  const seen = new Set();
+
+  for (const ch of topLevel) {
+    out.push(ch); seen.add(ch.id);
+    if (isCategory(ch)) {
+      const kids = childrenByParent.get(ch.id);
+      if (kids) for (const k of kids) { if (!seen.has(k.id)) { out.push(k); seen.add(k.id); } }
+    }
+  }
+
+  // Fallback: include any stragglers (e.g., child whose parent isn’t cached)
+  for (const ch of arr) if (!seen.has(ch.id)) out.push(ch);
+
+  return out;
+}
+
+var VOICE_CHANNEL_ICON = `<svg class="icon__2ea32" aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 3a1 1 0 0 0-1-1h-.06a1 1 0 0 0-.74.32L5.92 7H3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h2.92l4.28 4.68a1 1 0 0 0 .74.32H11a1 1 0 0 0 1-1V3ZM15.1 20.75c-.58.14-1.1-.33-1.1-.92v-.03c0-.5.37-.92.85-1.05a7 7 0 0 0 0-13.5A1.11 1.11 0 0 1 14 4.2v-.03c0-.6.52-1.06 1.1-.92a9 9 0 0 1 0 17.5Z" class=""></path><path d="M15.16 16.51c-.57.28-1.16-.2-1.16-.83v-.14c0-.43.28-.8.63-1.02a3 3 0 0 0 0-5.04c-.35-.23-.63-.6-.63-1.02v-.14c0-.63.59-1.1 1.16-.83a5 5 0 0 1 0 9.02Z" class=""></path></svg>`
+var THREAD_CHANNEL_ICON = `<svg class="icon__2ea32" aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M18.91 12.98a5.45 5.45 0 0 1 2.18 6.2c-.1.33-.09.68.1.96l.83 1.32a1 1 0 0 1-.84 1.54h-5.5A5.6 5.6 0 0 1 10 17.5a5.6 5.6 0 0 1 5.68-5.5c1.2 0 2.32.36 3.23.98Z" class=""></path><path d="M19.24 10.86c.32.16.72-.02.74-.38L20 10c0-4.42-4.03-8-9-8s-9 3.58-9 8c0 1.5.47 2.91 1.28 4.11.14.21.12.49-.06.67l-1.51 1.51A1 1 0 0 0 2.4 18h5.1a.5.5 0 0 0 .49-.5c0-4.2 3.5-7.5 7.68-7.5 1.28 0 2.5.3 3.56.86Z" class=""></path></svg>`
+var TEXT_CHANNEL_ICON = `<svg class="icon__2ea32" aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path  fill-rule="evenodd" d="M10.99 3.16A1 1 0 1 0 9 2.84L8.15 8H4a1 1 0 0 0 0 2h3.82l-.67 4H3a1 1 0 1 0 0 2h3.82l-.8 4.84a1 1 0 0 0 1.97.32L8.85 16h4.97l-.8 4.84a1 1 0 0 0 1.97.32l.86-5.16H20a1 1 0 1 0 0-2h-3.82l.67-4H21a1 1 0 1 0 0-2h-3.82l.8-4.84a1 1 0 1 0-1.97-.32L15.15 8h-4.97l.8-4.84ZM14.15 14l.67-4H9.85l-.67 4h4.97Z" clip-rule="evenodd" class=""></path></svg>`
+var ANNOUCEMENT_CHANNEL_ICON = `<svg class="icon__2ea32" aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M19.56 2a3 3 0 0 0-2.46 1.28 3.85 3.85 0 0 1-1.86 1.42l-8.9 3.18a.5.5 0 0 0-.34.47v10.09a3 3 0 0 0 2.27 2.9l.62.16c1.57.4 3.15-.56 3.55-2.12a.92.92 0 0 1 1.23-.63l2.36.94c.42.27.79.62 1.07 1.03A3 3 0 0 0 19.56 22h.94c.83 0 1.5-.67 1.5-1.5v-17c0-.83-.67-1.5-1.5-1.5h-.94Zm-8.53 15.8L8 16.7v1.73a1 1 0 0 0 .76.97l.62.15c.5.13 1-.17 1.12-.67.1-.41.29-.78.53-1.1Z" clip-rule="evenodd" class=""></path><path d="M2 10c0-1.1.9-2 2-2h.5c.28 0 .5.22.5.5v7a.5.5 0 0 1-.5.5H4a2 2 0 0 1-2-2v-4Z" class=""></path></svg>`
+var RULES_CHANNEL_ICON = `<svg class="icon__2ea32" aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M15 2a3 3 0 0 1 3 3v12H5.5a1.5 1.5 0 0 0 0 3h14a.5.5 0 0 0 .5-.5V5h1a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H5a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3h10Zm-.3 5.7a1 1 0 0 0-1.4-1.4L9 10.58l-2.3-2.3a1 1 0 0 0-1.4 1.42l3 3a1 1 0 0 0 1.4 0l5-5Z" clip-rule="evenodd" class=""></path></svg>`
+
+function getChannelIcon(channel, guild) {
+  // Special-case: the guild's designated Rules channel
+  if (guild?.rules_channel_id && channel.id === guild.rules_channel_id) {
+    return RULES_CHANNEL_ICON;
+  }
+
+  switch (channel.type) {
+    case 0: // Guild Text
+      return TEXT_CHANNEL_ICON;
+
+    case 2: // Guild Voice
+    case 13: // Stage Voice
+      return VOICE_CHANNEL_ICON;
+
+    case 4: // Category (usually no leading icon; return empty)
+      return "";
+
+    case 5: // Announcement / News
+      return ANNOUCEMENT_CHANNEL_ICON;
+
+    case 10: // News Thread
+    case 11: // Public Thread
+    case 12: // Private Thread
+      return THREAD_CHANNEL_ICON;
+
+    case 15: // Forum (fallback to text-style icon unless you have a forum icon)
+      return TEXT_CHANNEL_ICON;
+
+    default:
+      return ""; // Unknown/unsupported: no icon
+  }
+}
+
+function switch_guild(guild_id) {
+  console.log(`Switching to guild ${guild_id}`);
+  // grab this element <div data-type="nav-current-location">Direct Messages</div>
+  const nav_current_location = document.querySelector('[data-type="nav-current-location"]');
+  const guild = BreadCache.getGuild(guild_id);
+  if (guild) {
+    nav_current_location.innerText = guild.name;
+  } else {
+    nav_current_location.innerText = "Unknown Guild";
+  }
+  const sidebar_channels_list = document.querySelector('[data-container-id="sidebar-channels-list"]');
+  const sidebar_channels_list_ui = BreadUI.get_container("sidebar-channels-list");
+  // remove everything from it
+  while (sidebar_channels_list.firstChild) {
+    sidebar_channels_list.removeChild(sidebar_channels_list.firstChild);
+  }
+  const channels = guild.channels;
+  const sorted_channels = sort_channels(channels);
+
+  console.log("Sorted Channels:", sorted_channels);
+
+for (const channel of sorted_channels) {
+  const iconHtml = getChannelIcon(channel, guild);
+    let channel_element;
+    if (channel.type === 4) {
+      channel_element = BreadUI.create_element(`category-${channel.id}`, {}, { text: channel.name });
+    } else {
+      channel_element = BreadUI.create_container(`channel-${channel.id}`, "", {});
+      const channel_element_icon = BreadUI.create_element(`channelicon-${channel.id}`, {}, { html: iconHtml });
+      channel_element.add(channel_element_icon);
+      const channel_element_text = BreadUI.create_element(`channeltext-${channel.id}`, {}, { text: channel.name });
+      channel_element.add(channel_element_text);
+    }
+    sidebar_channels_list_ui.add(channel_element);
+  }
 }
 
 BreadCache.on_ready(() => {
@@ -196,10 +355,12 @@ BreadCache.on_ready(() => {
         const guild = BreadCache.getGuild(g_id);
         if (guild.icon) {
           const guild_btn = BreadUI.create_element(`guild-${guild.id}`, { backgroundImage: `url(${get_guild_icon_url(guild)})` }, {});
+          guild_btn.onclick(() => { switch_guild(guild.id); });
           folder_container.add(guild_btn);
         } else {
           const name = guild.name.split(/\s+/).map(w => w[0]).join("").toUpperCase().slice(0, 4);
           const guild_btn = BreadUI.create_element(`guild-${guild.id}`, {}, { text: name });
+          guild_btn.onclick(() => { switch_guild(guild.id); });
           folder_container.add(guild_btn);
         }
       }
@@ -217,12 +378,13 @@ BreadCache.on_ready(() => {
       if (guild.icon) {
         const guild_btn = BreadUI.create_element(`guild-${guild.id}`, { backgroundImage: `url(${get_guild_icon_url(guild)})` }, {});
         breadcord_server_list.add(guild_btn);
+        guild_btn.onclick(() => { switch_guild(guild.id); });
       } else {
         const name = guild.name.split(/\s+/).map(w => w[0]).join("").toUpperCase().slice(0, 4);
         const guild_btn = BreadUI.create_element(`guild-${guild.id}`, {}, { text: name });
+        guild_btn.onclick(() => { switch_guild(guild.id); });
         breadcord_server_list.add(guild_btn);
       }
     }
   }
 });
-

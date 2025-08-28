@@ -154,7 +154,8 @@ class UIElement extends UINode {
 
     if (this.data.html != null) {
       el.innerHTML = String(this.data.html);
-    } else if (this.data.text != null) {
+    }
+    if (this.data.text != null) {
       el.textContent = String(this.data.text);
     }
     if (this.data.attrs && typeof this.data.attrs === "object") {

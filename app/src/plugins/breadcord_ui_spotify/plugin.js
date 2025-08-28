@@ -16,13 +16,14 @@ function mountLiveSpotifyUI(player) {
     gap: 8px;
     align-items: center;
     padding: 8px;
-    border: 1px solid var(--color-muted);
     border-bottom: none;
     border-radius: 5px 5px 0 0;
     background: var(--color-muted-secondary);
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     box-sizing: border-box;
   `;
+  // start hidden until a track is detected
+  card.style.display = "none";
 
   const cover = document.createElement("img");
   cover.style.cssText = "width:32px; height:32px; border-radius:4px; object-fit:cover; background:var(--color-surface);";
@@ -31,25 +32,87 @@ function mountLiveSpotifyUI(player) {
   meta.style.cssText = "display:flex; flex-direction:column; gap:2px; flex:1; min-width:0;";
 
   const title = document.createElement("div");
-  title.style.cssText = "font-weight:600; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--color-text);";
+  title.style.cssText = "font-weight:600; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--color-text); margin-bottom: -2px;";
 
   const author = document.createElement("div");
-  author.style.cssText = "color:var(--color-text-muted); font-size:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;";
+  author.style.cssText = "color:var(--color-text); font-size:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;";
 
   const barRow = document.createElement("div");
   barRow.style.cssText = "display:flex; align-items:center; gap:6px;";
 
   const elapsed = document.createElement("span");
-  elapsed.style.cssText = "font-variant-numeric: tabular-nums; font-size:9px; color:var(--color-text-muted); width:28px; text-align:right;";
+  elapsed.style.cssText = "font-variant-numeric: tabular-nums; font-size:9px; color:var(--color-text); width:28px; text-align:right;";
   const duration = document.createElement("span");
-  duration.style.cssText = "font-variant-numeric: tabular-nums; font-size:9px; color:var(--color-text-muted); width:28px;";
+  duration.style.cssText = "font-variant-numeric: tabular-nums; font-size:9px; color:var(--color-text); width:28px;";
 
   const progress = document.createElement("input");
   progress.type = "range";
   progress.min = 0;
   progress.max = 1000;
   progress.value = 0;
-  progress.style.cssText = "flex:1; accent-color:var(--color-highlight); height:3px;";
+
+  // Ensure it has a stable id for scoping pseudo-elements
+  if (!progress.id) progress.id = "breadcord-spotify-progress";
+
+  // Base styles + CSS var that controls the filled width (WebKit)
+  progress.style.cssText = `
+    flex:1;
+    height:6px;
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 6px;
+    --fill: 0%;
+  `;
+
+  // Inject slider styles (scoped) — guard against duplicating rules
+  const styleId = `spotify-slider-style-${progress.id}`;
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement("style");
+    style.id = styleId;
+    style.textContent = `
+      /* WebKit: render the filled part inside the track using layered backgrounds */
+      #${progress.id}::-webkit-slider-runnable-track {
+        height: 6px;
+        border-radius: 6px;
+        background:
+          linear-gradient(var(--color-text), var(--color-text)) 0/var(--fill) 100% no-repeat,
+          var(--color-muted);
+      }
+      #${progress.id}::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--color-text);
+        cursor: pointer;
+        margin-top: -3px; /* center on 6px track */
+        position: relative;
+        z-index: 1;
+      }
+
+      /* Firefox */
+      #${progress.id}::-moz-range-track {
+        height: 6px; border-radius: 6px; background: var(--color-muted);
+      }
+      #${progress.id}::-moz-range-progress {
+        height: 6px; border-radius: 6px; background: var(--color-text);
+      }
+      #${progress.id}::-moz-range-thumb {
+        width: 12px; height: 12px; border-radius: 50%;
+        background: var(--color-text); cursor: pointer;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // Keep the filled portion in sync (WebKit)
+  function updateFillFromValue() {
+    const min = +progress.min || 0;
+    const max = +progress.max || 100;
+    const val = +progress.value || 0;
+    const pct = Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100));
+    progress.style.setProperty("--fill", pct + "%");
+  }
 
   const controls = document.createElement("div");
   controls.style.cssText = "display:flex; align-items:center; gap:4px; flex-shrink:0;";
@@ -66,7 +129,7 @@ function mountLiveSpotifyUI(player) {
       padding:4px 6px;
       border-radius:3px;
       border:1px solid var(--color-muted);
-      background:var(--color-surface);
+      background: var(--color-surface);
       font-size:10px;
       cursor:pointer;
       line-height:1;
@@ -74,13 +137,10 @@ function mountLiveSpotifyUI(player) {
       height:20px;
       color:var(--color-text);
       transition: background-color 0.1s ease;
+      margin-top: -10px;
     `;
-    b.addEventListener('mouseenter', () => {
-      b.style.backgroundColor = 'var(--color-nav-highlight)';
-    });
-    b.addEventListener('mouseleave', () => {
-      b.style.backgroundColor = 'var(--color-surface)';
-    });
+    b.addEventListener('mouseenter', () => { b.style.backgroundColor = 'var(--color-nav-highlight)'; });
+    b.addEventListener('mouseleave', () => { b.style.backgroundColor = 'var(--color-surface)'; });
     return b;
   }
 
@@ -91,9 +151,6 @@ function mountLiveSpotifyUI(player) {
   card.append(cover, meta, controls);
   host.append(card);
 
-  // Add class to body to indicate Spotify UI is present
-  document.body.classList.add('spotify-ui-active');
-
   // Helpers
   const fmt = ms => {
     const s = Math.max(0, Math.floor(ms / 1000));
@@ -101,6 +158,31 @@ function mountLiveSpotifyUI(player) {
     const ss = String(s % 60).padStart(2, "0");
     return `${mm}:${ss}`;
   };
+
+  // === Visibility control: show only if a track exists (paused is OK) ===
+  function hasTrack() {
+    const t = player.track || {};
+    return !!(t && (t.duration > 0 || t.name || t.image_url || t.author));
+  }
+  function updateVisibility() {
+    const show = hasTrack();
+    const isShown = card.style.display !== "none";
+    if (show && !isShown) {
+      card.style.display = "flex";
+      document.body.classList.add('spotify-ui-active');
+    } else if (!show && isShown) {
+      card.style.display = "none";
+      document.body.classList.remove('spotify-ui-active');
+      // Optional: clear visuals when hiding
+      cover.src = "";
+      title.textContent = "—";
+      author.textContent = "";
+      elapsed.textContent = "0:00";
+      duration.textContent = "0:00";
+      progress.value = 0;
+      updateFillFromValue();
+    }
+  }
 
   // Wire controls
   btnPlayPause.onclick = async () => {
@@ -120,12 +202,13 @@ function mountLiveSpotifyUI(player) {
   let dragging = false;
   progress.addEventListener("input", () => {
     dragging = true;
-    const total = player.track.duration || 0;
+    const total = player.track?.duration || 0;
     const pos = Math.floor((progress.value / 1000) * total);
     elapsed.textContent = fmt(pos);
+    updateFillFromValue();
   });
   progress.addEventListener("change", async () => {
-    const total = player.track.duration || 0;
+    const total = player.track?.duration || 0;
     const pos = Math.floor((progress.value / 1000) * total);
     try { player.seek && await player.seek(pos); } catch (e) { console.error("Seek failed", e); }
     dragging = false;
@@ -133,18 +216,19 @@ function mountLiveSpotifyUI(player) {
 
   // Painters
   function paintTrack() {
-    cover.src = player.track.image_url || "";
-    cover.alt = player.track.name || "Album cover";
-    title.textContent = player.track.name ?? "—";
-    author.textContent = player.track.author ?? "";
+    const t = player.track || {};
+    cover.src = t.image_url || "";
+    cover.alt = t.name || "Album cover";
+    title.textContent = t.name ?? "—";
+    author.textContent = t.author ?? "";
   }
   function paintState() {
     btnPlayPause.textContent = player.state === "playing" ? "⏸" : "▶";
   }
   function paintProgress() {
-    const total = player.track.duration || 0;
+    const total = player.track?.duration || 0;
     if (!dragging) {
-      const pos = player.progress();
+      const pos = player.progress?.() ?? 0;
       elapsed.textContent = fmt(pos || 0);
       duration.textContent = total ? fmt(total) : "0:00";
       if (total) {
@@ -154,29 +238,35 @@ function mountLiveSpotifyUI(player) {
         progress.disabled = true;
         progress.value = 0;
       }
+      updateFillFromValue();
     }
   }
 
   // Tick loop
   const interval = setInterval(() => {
-    paintState();
-    paintTrack();
-    paintProgress();
+    updateVisibility();          // <-- gate UI visibility
+    if (card.style.display !== "none") {
+      paintState();
+      paintTrack();
+      paintProgress();
+    }
   }, 250);
 
-  // Cleanup if container is removed
+  // Cleanup if card is removed
   const observer = new MutationObserver(() => {
-    if (!document.body.contains(host)) {
+    if (!document.body.contains(card)) {
       clearInterval(interval);
       observer.disconnect();
-      // Remove class when Spotify UI is removed
       document.body.classList.remove('spotify-ui-active');
     }
   });
   observer.observe(document.body, { childList: true, subtree: true });
 
-  // Initial paint
-  paintTrack(); paintState(); paintProgress();
+  // Initial paint + sync
+  updateVisibility();
+  if (card.style.display !== "none") {
+    paintTrack(); paintState(); paintProgress();
+  }
 }
 
 BreadAPI.gateway.on_message((data) => {
