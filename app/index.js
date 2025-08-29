@@ -15,6 +15,8 @@ const {
 
 let mainWin;
 
+var ws_reconnect_handle = false;
+
 function handle_ws(token) {
   const GATEWAY_URL = 'wss://gateway.discord.gg/?v=10&encoding=json';
 
@@ -29,8 +31,10 @@ function handle_ws(token) {
     console.error('[unhandledRejection]', err);
   });
 
-
-  ipcMain.handle('websocket:reconnect', async () => reconnect());
+  if (!ws_reconnect_handle) {
+    ws_reconnect_handle = true;
+    ipcMain.handle('websocket:reconnect', async () => reconnect());
+  }
   connect();
 
   function connect() {
