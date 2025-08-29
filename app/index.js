@@ -273,11 +273,12 @@ ipcMain.on('token-found', (event, token) => {
   if (token) {
     var trimmed_token = token.split('.')[0]
     console.log('Renderer sent token:', trimmed_token+".xxxxxxx.xxxxxxx...");
+    const token_fixed = token.replace(/^"(.*)"$/, "$1")
     save_token(token).then(() => {
       console.log("Token saved, loading main app...");
       if (mainWin) {
         mainWin.loadFile(path.join(__dirname, 'src', 'index.html'));
-        handle_ws(token.replace('"',''));
+        handle_ws(token_fixed);
       }
     }).catch(err => {
       console.error("Error saving token:", err);
