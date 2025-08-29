@@ -277,7 +277,7 @@ ipcMain.on('token-found', (event, token) => {
       console.log("Token saved, loading main app...");
       if (mainWin) {
         mainWin.loadFile(path.join(__dirname, 'src', 'index.html'));
-        handle_ws(token);
+        handle_ws(token.replace('"',''));
       }
     }).catch(err => {
       console.error("Error saving token:", err);
