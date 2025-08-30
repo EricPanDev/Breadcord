@@ -150,7 +150,7 @@ getPlugins().then(list => {
     },
   };
 
-  const BreadAPI = Object.freeze({
+  const BreadAPI = {
     version: BreadAPIClass.version,
     info: BreadAPIClass.info,
     alert: BreadAPIClass.alert,
@@ -158,18 +158,33 @@ getPlugins().then(list => {
     off: BreadAPIClass.off.bind(BreadAPIClass),
     emit: BreadAPIClass.emit.bind(BreadAPIClass),
     ready,
-    gateway: Object.freeze({
+    gateway: {
+      send: (payload) => ipcRenderer.invoke('gateway:send', payload),
       on_message: BreadAPIClass.gateway.on_message,
       off_message: BreadAPIClass.gateway.off_message,
       once_message: BreadAPIClass.gateway.once_message,
-    }),
+    },
     plugins: BreadAPIClass.plugins,
-    app: Object.freeze({
+    app: {
       close: BreadAPIClass.app.close,
       maximize: BreadAPIClass.app.maximize,
       minimize: BreadAPIClass.app.minimize,
-    }),
-  });
+    },
+  };
+
+  function deepFreeze(obj) {
+  Object.getOwnPropertyNames(obj).forEach((prop) => {
+      if (
+        obj[prop] !== null &&
+        (typeof obj[prop] === 'object' || typeof obj[prop] === 'function')
+      ) {
+        deepFreeze(obj[prop]);
+      }
+    });
+    return Object.freeze(obj);
+  }
+
+  deepFreeze(BreadAPI);
 
   contextBridge.exposeInMainWorld('BreadAPI', BreadAPI);
 });

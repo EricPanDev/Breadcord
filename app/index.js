@@ -2,6 +2,7 @@ const { app, BrowserWindow, screen, ipcMain } = require('electron');
 const path = require('path');
 const windowStateKeeper = require('electron-window-state');
 const WebSocket = require('ws');
+const BreadcordVoiceHandler = require("./BreadcordVoiceHandler");
 
 ipcMain.on('log', (event, log) => {
   console.log('[Renderer]', log);
@@ -16,6 +17,7 @@ const {
 let mainWin;
 
 var ws_reconnect_handle = false;
+let ws_send_handle = false;
 
 function handle_ws(token) {
   const GATEWAY_URL = 'wss://gateway.discord.gg/?v=10&encoding=json';
@@ -35,6 +37,19 @@ function handle_ws(token) {
     ws_reconnect_handle = true;
     ipcMain.handle('websocket:reconnect', async () => reconnect());
   }
+  if (!ws_send_handle) {
+    ws_send_handle = true;
+    ipcMain.handle('gateway:send', async (_event, payload) => {
+      try {
+        send(payload);            // <- calls the closure's send()
+        return { ok: true };
+      } catch (e) {
+        return { ok: false, error: e?.message || String(e) };
+      }
+    });
+  }
+
+
   connect();
 
   function connect() {

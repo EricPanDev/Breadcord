@@ -289,6 +289,6 @@ class UIContainer extends UINode {
 /**
  *  Debug - Log WS to console
  */
-BreadAPI.gateway.on_message((data) => {
-  console.log("[WS]", data);
-});
+// BreadAPI.gateway.on_message((data) => {
+//   console.log("[WS]", data);
+// });

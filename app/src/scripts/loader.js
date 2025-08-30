@@ -56,7 +56,7 @@ async function determinePluginLoadOrder(pluginNames, pluginsRoot = 'plugins') {
     for (const d of deps) {
       if (!metaByName.has(d)) {
         // Helpful hint: show where we looked
-        const jsonPath = path.join(pluginsRoot, d, 'plugin.json');
+        const jsonPath = `${pluginsRoot}/${encodeURIComponent(d)}/plugin.json`;
         throw new Error(
           `Plugin "${name}" depends on "${d}", but "${d}" is not in BreadAPI.plugins or ${jsonPath} is missing.`
         );
