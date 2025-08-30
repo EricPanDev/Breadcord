@@ -101,16 +101,25 @@ Create your own plugins using:
 
 Breadcord supports most Discord features including:
 - **Messaging**: Send and receive messages
-- **Voice Channels**: Join voice channels (basic support)
+- **Voice Channels**: Full voice channel support with audio and video
 - **Server Management**: Manage servers you have permissions for
 - **User Management**: Friends, blocking, user profiles
+
+### Voice & Video Features
+
+Breadcord includes a complete voice implementation:
+- **High-Quality Audio**: 48kHz stereo audio with noise suppression
+- **Video Streaming**: HD video support up to 1280x720
+- **Advanced Controls**: Mute/unmute, video on/off, speaking detection
+- **Real-time Communication**: WebRTC-based voice and video calls
+- **Auto-reconnection**: Reliable connection with error recovery
 
 ### Feature Limitations
 
 Some Discord features may have limitations:
-- **Video Calls**: Limited video calling support
 - **Screen Sharing**: Basic screen sharing functionality
 - **Game Integration**: Limited Rich Presence support
+- **Some newer features**: May not be implemented yet
 
 ## 🔍 Tips and Tricks
 
