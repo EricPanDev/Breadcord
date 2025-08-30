@@ -2,7 +2,7 @@ const { app, BrowserWindow, screen, ipcMain } = require('electron');
 const path = require('path');
 const windowStateKeeper = require('electron-window-state');
 const WebSocket = require('ws');
-const BreadcordVoiceHandler = require("./BreadcordVoiceHandler");
+// const BreadcordVoiceHandler = require("./BreadcordVoiceHandler"); // Not used - voice handler is in plugin
 
 ipcMain.on('log', (event, log) => {
   console.log('[Renderer]', log);

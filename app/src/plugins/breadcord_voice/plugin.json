@@ -1,8 +1,8 @@
 {
     "id": "breadcord_voice",
     "name": "Breadcord Voice",
-    "version": "1.0.0",
-    "description": "Breadcord Discord VC Implementation",
+    "version": "2.0.0",
+    "description": "Complete Discord User Voice API implementation with WebRTC support for audio/video calling",
     "github": "https://github.com/ericpandev/breadcord",
     "dependencies": []
 }
