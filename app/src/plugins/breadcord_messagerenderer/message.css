@@ -1,0 +1,772 @@
+
+.breadcord-message {
+  display: flex;
+  gap: 12px;
+  padding: 8px 16px;
+  color: var(--color-text, #e0e0e0);
+  font-family: var(--font-family, 'Ubuntu', sans-serif);
+  transition: background-color 120ms ease, box-shadow 120ms ease;
+  background-color: var(--message-bg, transparent);
+  box-sizing: border-box;
+  padding-bottom: 0 !important;
+}
+
+.breadcord-message:hover {
+  background-color: var(--message-hover-bg, rgba(63, 41, 5, 0.232));
+}
+
+.breadcord-message--mentioned {
+  background-color: var(--message-mention-bg, rgba(255, 214, 64, 0.058));
+  border-left: 3px solid rgba(255, 214, 64, 0.85);
+  padding-left: calc(16px - 3px);
+}
+
+.breadcord-message--mentioned:hover {
+  background-color: var(--message-mention-hover-bg, rgba(255, 214, 64, 0.058));
+}
+
+.breadcord-message__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background-size: cover;
+  background-position: center;
+  background-color: var(--color-muted, rgba(255,255,255,0.1));
+  position: relative;
+  overflow: visible;
+}
+
+.breadcord-message--compact .breadcord-message__avatar {
+  display: none !important;
+}
+
+.breadcord-message__avatar-decoration {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(125% - 2px);
+  height: calc(125% - 2px);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  object-fit: contain;
+  image-rendering: -webkit-optimize-contrast;
+  z-index: 2;
+}
+
+.breadcord-message__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 4px;
+}
+
+.breadcord-message__header {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.breadcord-message__author {
+  font-weight: 500;
+  color: var(--color-text-strong, #f5f6f7);
+  font-size: 16px;
+}
+
+.breadcord-message__clan-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 4px;
+  background-color: var(--clan-badge-bg, rgba(255, 255, 255, 0.14));
+  color: var(--clan-badge-text, #f8f9fb);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1;
+  align-self: center;
+  margin-left: 2px;
+}
+
+.breadcord-message__clan-badge-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  object-fit: contain;
+  border-radius: 2px;
+}
+
+.breadcord-message__clan-badge-text {
+  line-height: 1;
+}
+
+.breadcord-message__author--gradient {
+  position: relative;
+  color: transparent !important;
+  background-image: var(--role-gradient);
+  background-size: 220% 100%;
+  background-position: 0% 50%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: breadcord-role-gradient-shift 9s ease-in-out infinite, breadcord-role-gradient-glow 3.6s ease-in-out infinite;
+  text-shadow: 0 0 6px var(--role-gradient-glow-weak, rgba(255,255,255,0.28)), 0 0 14px var(--role-gradient-glow-weak, rgba(255,255,255,0.24));
+}
+
+@keyframes breadcord-role-gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes breadcord-role-gradient-glow {
+  0%, 100% {
+    text-shadow: 0 0 6px var(--role-gradient-glow-weak, rgba(255,255,255,0.28)), 0 0 14px var(--role-gradient-glow-weak, rgba(255,255,255,0.24));
+  }
+  50% {
+    text-shadow: 0 0 10px var(--role-gradient-glow-strong, rgba(255,255,255,0.52)), 0 0 24px var(--role-gradient-glow-strong, rgba(255,255,255,0.38));
+  }
+}
+
+.breadcord-message__role-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+  margin-left: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  /* margin-top: -2px; */
+}
+
+.breadcord-message__role-icon--emoji {
+  width: 22px;
+  height: 22px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.breadcord-message__timestamp {
+  font-size: 12px;
+  color: var(--color-muted-timestamp, rgba(255,255,255,0.68));
+  font-weight: 500;
+}
+
+.breadcord-message__interaction {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--interaction-bg, rgba(88, 101, 242, 0.16));
+  color: var(--color-muted-secondary, rgba(255,255,255,0.72));
+  font-size: 13px;
+  line-height: 1.35;
+  max-width: 100%;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+}
+
+.breadcord-message__interaction-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--interaction-icon-bg, rgba(88, 101, 242, 0.35));
+  color: var(--interaction-icon-color, #aab4ff);
+  font-weight: 700;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.breadcord-message__interaction-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.breadcord-message__interaction-user {
+  color: var(--color-text-strong, #f5f6f7);
+  font-weight: 600;
+}
+
+.breadcord-message__interaction-command {
+  color: var(--interaction-command-color, #c7ceff);
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.breadcord-message__interaction-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.breadcord-message__interaction-option {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--interaction-option-bg, rgba(255,255,255,0.08));
+  color: var(--color-muted-secondary, rgba(255,255,255,0.75));
+  font-size: 12px;
+}
+
+.breadcord-message__interaction-option-name {
+  color: var(--color-text-strong, #f5f6f7);
+  font-weight: 600;
+}
+
+.breadcord-message__interaction-option-value {
+  color: var(--color-muted-tertiary, rgba(255,255,255,0.7));
+  font-weight: 500;
+}
+
+.breadcord-message__content {
+  font-size: 14px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.35;
+}
+
+.breadcord-md-heading {
+  margin: 6px 0 4px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--color-text-strong, #f5f6f7);
+}
+
+.breadcord-md-heading--h1 {
+  font-size: 28px;
+}
+
+.breadcord-md-heading--h2 {
+  font-size: 20px;
+}
+
+.breadcord-md-heading--h3 {
+  font-size: 15px;
+}
+
+.breadcord-md-paragraph {
+  margin: 2px 0;
+  line-height: 1.45;
+}
+
+.breadcord-md-blockquote {
+  margin: 6px 0;
+  padding-left: 12px;
+  border-left: 3px solid rgba(255, 255, 255, 0.18);
+  color: var(--color-muted-timestamp, rgba(255,255,255,0.7));
+  display: block;
+}
+
+.breadcord-md-blockquote-line {
+  display: block;
+}
+
+.breadcord-md-blockquote-line + .breadcord-md-blockquote-line {
+  margin-top: 4px;
+}
+
+.breadcord-md-blockquote-list {
+  margin: 4px 0 4px 18px;
+  padding-left: 18px;
+}
+
+.breadcord-md-blockquote-list .breadcord-md-list {
+  margin-top: 4px;
+}
+
+.breadcord-md-list {
+  margin: 4px 0 4px 18px;
+  padding-left: 18px;
+  list-style: disc;
+}
+
+.breadcord-md-list .breadcord-md-list {
+  margin-top: 4px;
+  list-style: circle;
+}
+
+.breadcord-md-list-item {
+  margin: 2px 0;
+  line-height: 1.4;
+}
+
+.breadcord-md-subtext {
+  margin: 2px 0;
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--color-muted-tertiary, rgba(255,255,255,0.45));
+}
+
+.breadcord-inline-code {
+  font-family: var(--font-code, 'Fira Code', 'Courier New', monospace);
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 4px;
+  padding: 0 4px;
+  font-size: 0.95em;
+}
+
+.breadcord-underline {
+  text-decoration: underline;
+}
+
+.breadcord-message__attachment-list,
+.breadcord-message__reaction-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.breadcord-message__embed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: min(500px, 100%);
+  align-items: flex-start;
+}
+
+.breadcord-message__attachment {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--color-muted, rgba(255,255,255,0.2));
+  background: var(--color-surface, rgba(0,0,0,0.3));
+  /* let attachment size to its content up to 500px instead of forcing full width */
+  display: inline-block;
+  width: auto;
+  max-width: 500px;
+  box-sizing: border-box;
+}
+
+/* attachment images should not force container width; limit size but keep intrinsic aspect */
+.breadcord-message__attachment img {
+  display: block;
+  max-width: 100%;
+  width: auto;
+  height: auto;
+}
+/* cap attachment image height */
+.breadcord-message__embed-thumb,
+.breadcord-message__embed-image,
+.breadcord-message__embed-video,
+.breadcord-inline-media__image,
+.breadcord-inline-media__video,
+.breadcord-inline-video img {
+  max-height: 500px;
+  height: auto;
+  width: auto; /* preserve aspect ratio and avoid forced stretching */
+  max-width: 100%;
+  object-fit: contain;
+}
+
+/* keep attachments full-width but cap height */
+.breadcord-message__attachment img {
+  max-height: 500px;
+  height: auto;
+  width: 100%;
+  object-fit: contain;
+}
+
+.breadcord-message__attachment a {
+  display: block;
+  padding: 8px 12px;
+  color: var(--color-primary, #7289da);
+  text-decoration: none;
+  font-size: 13px;
+  word-break: break-all;
+}
+
+.breadcord-message__embed {
+  position: relative;
+  background: var(--color-surface, rgba(0,0,0,0.25));
+  padding: 12px 16px 12px 20px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden; /* ensures pseudo stays inside rounded corners */
+  width: 100%;
+  max-width: 500px;
+  box-sizing: border-box;
+}
+
+.breadcord-message__embed::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: var(--embed-accent, #4f545c);
+  border-radius: 0; /* no rounding */
+}
+
+.breadcord-message__embed-thumb {
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.breadcord-message__embed-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.breadcord-message__embed-title {
+  font-weight: 600;
+  color: var(--color-primary, #7289da);
+  word-break: break-word;
+  display: inline-block;
+}
+
+.breadcord-message__embed-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.breadcord-message__embed-title a:hover {
+  text-decoration: underline;
+}
+
+.breadcord-message__embed-description {
+  font-size: 14px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  color: var(--color-text, #dcdcdc);
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.breadcord-message__embed-description a,
+.breadcord-message__embed-field-value a,
+.breadcord-message__embed-footer a {
+  color: var(--color-link, #4da3ff);
+  text-decoration: none;
+}
+
+.breadcord-message__embed-description a:hover,
+.breadcord-message__embed-field-value a:hover,
+.breadcord-message__embed-footer a:hover {
+  text-decoration: underline;
+}
+
+.breadcord-message__embed-author {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-muted-timestamp, rgba(255,255,255,0.65));
+}
+
+.breadcord-message__embed-author a {
+  color: inherit;
+  text-decoration: none;
+}
+.breadcord-message__embed-author a:hover {
+  text-decoration: underline;
+}
+
+.breadcord-message__embed-author-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.breadcord-message__embed-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.breadcord-message__embed-field {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  padding: 6px 8px;
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.breadcord-message__embed-field--inline {
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 160px;
+  flex: 1 1 160px;
+}
+
+.breadcord-message__embed-field-name {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.breadcord-message__embed-field-value {
+  font-size: 13px;
+  white-space: pre-wrap;
+}
+
+
+.breadcord-message__embed-image,
+.breadcord-message__embed-video {
+  margin-top: 8px;
+  border-radius: 8px;
+  max-width: 100%;
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.breadcord-message__embed-video {
+  background: #000;
+}
+
+.breadcord-message__embed-thumb {
+  max-width: 100%;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.breadcord-message__embed-footer {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--color-muted-footer, rgba(255,255,255,0.58));
+}
+
+.breadcord-inline-media {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: min(500px, 100%);
+  align-items: flex-start;
+}
+
+.breadcord-inline-media__image,
+.breadcord-inline-media__video {
+  border-radius: 8px;
+  display: block;
+  height: auto;
+  max-width: 100%;
+  width: auto;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.breadcord-inline-media__video {
+  background: #000;
+}
+
+.breadcord-message__embed-footer-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.breadcord-message__embed-footer-timestamp::before {
+  content: '•';
+  margin: 0 4px;
+}
+
+.breadcord-message__embed-footer-timestamp {
+  color: var(--color-muted-timestamp, rgba(255,255,255,0.68));
+  font-weight: 500;
+}
+
+.breadcord-inline-video {
+  display: block;
+  margin: 8px 0;
+  max-width: min(500px, 100%);
+  border-radius: 8px;
+  width: auto;
+  height: auto;
+  box-sizing: border-box;
+  background: transparent;
+  align-self: flex-start;
+}
+
+.breadcord-message__reaction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  background: var(--color-muted, rgba(255,255,255,0.1));
+  color: var(--color-text, #fff);
+}
+
+.breadcord-message__reaction--self {
+  background: var(--color-accent, rgba(114,137,218,0.3));
+}
+
+.breadcord-message__edited-tag {
+  font-size: 11px;
+  color: var(--color-muted-secondary, rgba(255,255,255,0.45));
+}
+
+.breadcord-message--compact {
+  margin-top: -10px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: calc(16px + 40px + 12px);
+}
+
+.breadcord-message--compact .breadcord-message__content {
+  margin-top: 0;
+}
+
+.breadcord-message__body--compact {
+  gap: 0;
+}
+
+.breadcord-emoji {
+  display: inline-block;
+  vertical-align: text-bottom;
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  margin: 0 2px;
+}
+
+.breadcord-emoji--reaction {
+  width: 18px;
+  height: 18px;
+  /* margin-right: 6px; */
+}
+
+.breadcord-message__reaction-count {
+  /* margin-left: 6px; */
+  font-size: 12px;
+}
+
+/* Mentions */
+.mention {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(114,137,218,0.08);
+  color: var(--color-primary, #7289da);
+  text-decoration: none;
+  margin: 0 2px;
+  font-weight: 600;
+  font-size: 0.95em;
+  line-height: 1.1;
+  cursor: pointer;
+}
+
+.mention:hover {
+  background: rgba(114,137,218,0.12);
+}
+
+.mention-user {
+  color: var(--color-mention-user, #ffd166);
+}
+
+.mention-role {
+  color: var(--color-mention-role, #f7c948);
+}
+
+.mention-channel {
+  color: var(--color-mention-channel, #9ad1ff);
+}
+
+.mention-everyone {
+  background: rgba(220,53,69,0.12);
+  color: var(--color-danger, #ff6b6b);
+}
+
+.mention-link.mention-message {
+  color: var(--color-link, #4da3ff); /* slightly stronger, more readable blue */
+  text-decoration: underline;
+}
+
+/* generic links inside message content */
+.breadcord-message__content a {
+  color: var(--color-link, #4da3ff);
+  text-decoration: none;
+}
+.breadcord-message__content a:hover {
+  text-decoration: underline;
+}
+
+/* YouTube thumbnail embed */
+.breadcord-youtube-embed {
+  width: 100%;
+  max-width: 720px;
+  margin: 8px 0;
+  position: relative;
+  cursor: pointer;
+  display: block;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.1);
+  aspect-ratio: 16 / 9;
+}
+.breadcord-youtube-embed img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.breadcord-youtube-embed .play-btn {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95), rgba(255,255,255,0.85));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+  transition: transform 0.15s ease;
+}
+.breadcord-youtube-embed .play-btn::after {
+  content: '';
+  display: inline-block;
+  margin-left: 6px;
+  border-style: solid;
+  border-width: 12px 0 12px 20px;
+  border-color: transparent transparent transparent rgba(0,0,0,0.85);
+}
+.breadcord-youtube-embed:hover .play-btn {
+  transform: translate(-50%, -50%) scale(1.05);
+}
+.breadcord-youtube-embed.is-playing {
+  cursor: default;
+}
+.breadcord-youtube-embed.is-playing .play-btn {
+  display: none;
+}
+.breadcord-youtube-embed iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}

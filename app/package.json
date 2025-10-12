@@ -1,0 +1,65 @@
+{
+  "name": "breadcord",
+  "productName": "Breadcord",
+  "version": "2.0.0",
+  "author": {
+    "name": "ericpandev",
+    "email": "eric@ericpan.dev",
+    "url": "https://github.com/ericpandev"
+  },
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^37.3.1",
+    "electron-builder": "^26.0.12"
+  },
+  "dependencies": {
+    "electron-window-state": "^5.0.3",
+    "keytar": "^7.9.0",
+    "ws": "^8.18.3"
+  },
+  "build": {
+    "appId": "com.breadcord.app",
+    "productName": "Breadcord",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "index.js",
+      "preload.js",
+      "tokenStore.js",
+      "src/**/*",
+      "package.json",
+      "icon/**/*"
+    ],
+    "artifactName": "${productName}-${os}-${arch}.${ext}",
+    "asar": true,
+    "mac": {
+      "icon": "icon/icon.icns",
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.social-networking"
+    },
+    "win": {
+      "icon": "icon/icon.ico",
+      "target": [
+        "nsis"
+      ]
+    },
+    "linux": {
+      "icon": "icon/icon.png",
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Network"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ericpandev/Breadcord.git"
+  }
+}

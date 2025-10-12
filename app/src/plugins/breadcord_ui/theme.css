@@ -1,0 +1,723 @@
+/* Ubuntu Regular */
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('fonts/Ubuntu-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* Ubuntu Italic */
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('fonts/Ubuntu-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+}
+
+/* Ubuntu Bold */
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('fonts/Ubuntu-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* Ubuntu Bold Italic */
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('fonts/Ubuntu-BoldItalic.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+}
+
+/* Ubuntu Light */
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('fonts/Ubuntu-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+}
+
+/* Ubuntu Light Italic */
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('fonts/Ubuntu-LightItalic.ttf') format('truetype');
+  font-weight: 300;
+  font-style: italic;
+}
+
+/* Ubuntu Medium */
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('fonts/Ubuntu-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+/* Ubuntu Medium Italic */
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('fonts/Ubuntu-MediumItalic.ttf') format('truetype');
+  font-weight: 500;
+  font-style: italic;
+}
+
+:root {
+  --breadcord-nav-height: 32px;
+  --font-family: 'Ubuntu', sans-serif;
+  --breadcord-channel-container-width: 240px;
+  --breadcord-server-container-width: 60px;
+  --user-corner-profile-card-height: 56px;
+  --color-faded:rgba(218, 218, 218, 0.9);
+  --sb-size: 12px;                    /* scrollbar thickness */
+  --sb-radius: 8px;                   /* thumb rounding */
+  --sb-track: hsl(0 0% 95%);          /* light track */
+  --sb-thumb: hsl(0 0% 70%);          /* light thumb */
+  --sb-thumb-hover: hsl(0 0% 55%);
+  --sb-thumb-active: hsl(0 0% 40%);
+}
+
+* {
+  font-family: var(--font-family);
+}
+
+:root, 
+html, 
+body,
+[data-container-id="breadcord"],
+[data-container-id="breadcord-app"] {
+  transition: background-color 1s ease, color 1s ease, border-color 1s ease;
+  overflow: hidden;
+
+}
+
+/* Light theme */
+html.light, body.light {
+  --color-background:       #faf7f2;
+  --color-surface:          #f3eadf;
+  --color-primary:          #c68a4a;
+  --color-secondary:        #a86b39;
+  --color-accent:           #7d4e2f;
+  --color-contrast:         #3f2a1d;
+  --color-dark:             #231a14;
+  --color-highlight:        #fff1cc;
+  --color-muted:            #d8cbb8;
+  --color-muted-secondary:  #c7b59a;
+  --color-text:             #2b2118;
+  --color-nav-text:         #cdaa7f;
+  --color-nav-btn:          #cdaa7f;
+  --color-nav-highlight:    rgb(232, 216, 196);
+}
+
+/* Dark theme */
+html.dark, body.dark {
+  --color-background: #14110f;  /* dark rye */
+  --color-surface:    #1c1713;  /* slightly lifted panel */
+  --color-primary:    #d7a46b;  /* warm amber */
+  --color-secondary:  #b78455;  /* softer crust */
+  --color-accent:     #8e603b;  /* toast accent */
+  --color-contrast:   #e0c28f;  /* light accent for badges/borders */
+  --color-dark:       #f0d9b5;  /* pale wheat for highlights */
+  --color-highlight:  #f3eadf;  /* gentle highlight bg */
+  --color-muted:      #3c2f26;  /* low-contrast border */
+  --color-muted-secondary:     rgb(68, 55, 46);  /* low-contrast border */
+  --color-text:       #f5efe7;  /* warm near-white */
+  --color-nav-text:   #a08a71;  /* amber for nav text */
+  --color-nav-btn:    #a08a71;  /* amber for nav buttons */
+  --color-nav-highlight: #5e4b33;
+    --sb-track: hsl(0 0% 16%);
+    --sb-thumb: hsl(0 0% 36%);
+    --sb-thumb-hover: hsl(0 0% 48%);
+    --sb-thumb-active: hsl(0 0% 62%);
+}
+* {
+  scrollbar-width: thin;                                   /* "auto" | "thin" | "none"  */
+  scrollbar-color: var(--sb-thumb) var(--sb-track);        /* thumb track */
+}
+
+/* ===== Chrome / Edge / Safari (WebKit) ===== */
+*::-webkit-scrollbar {
+  width: var(--sb-size);
+  height: var(--sb-size);
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--sb-track);
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--sb-thumb);
+  border-radius: var(--sb-radius);
+  border: 3px solid var(--sb-track);                       /* gap around the thumb */
+}
+
+*::-webkit-scrollbar-thumb:hover  { background-color: var(--sb-thumb-hover); }
+*::-webkit-scrollbar-thumb:active { background-color: var(--sb-thumb-active); }
+*::-webkit-scrollbar-corner       { background: var(--sb-track); }
+
+/* ===== Optional: avoid layout shift when scrollbars appear ===== */
+.scroll-stable {
+  scrollbar-gutter: stable both-edges;
+}
+
+/* ===== Optional: high-contrast / Windows forced colors ===== */
+@media (forced-colors: active) {
+  * {
+    scrollbar-color: Auto;          /* let OS handle contrast */
+  }
+  *::-webkit-scrollbar-thumb { background-color: CanvasText; border: 0; }
+  *::-webkit-scrollbar-track { background: Canvas; }
+}
+[data-type="vstack"] {
+  display: flex;
+  flex-direction: column;
+}
+
+[data-type="hstack"] {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* fixed server sidebar */
+[data-container-id="breadcord-server-container"] {
+  flex: 0 0 var(--breadcord-server-container-width);
+  min-width: var(--breadcord-server-container-width);
+  max-width: var(--breadcord-server-container-width);
+  flex-shrink: 0;
+  width: var(--breadcord-server-container-width);
+  background-color: var(--color-background);
+  display: block;
+  display: block;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+  padding: 10px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  padding-bottom: calc(var(--user-corner-profile-card-height) + 10px)
+}
+
+/* Adjust server container padding when Spotify UI is active */
+.spotify-ui-active [data-container-id="breadcord-server-container"] {
+  padding-bottom: calc(var(--user-corner-profile-card-height) + 48px + 18px)
+}
+[data-container-id="breadcord-server-container"]::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+/* channel list with resizable handle */
+[data-container-id="breadcord-channel-container"] {
+  flex: 0 0 var(--breadcord-channel-container-width);
+  min-width: 150px;   /* prevent too small */
+  max-width: 400px;   /* prevent too large */
+  overflow: auto;
+  background-color: var(--color-surface);
+}
+
+/* draggable divider */
+.resizer {
+  width: 5px;
+  cursor: col-resize;
+  background-color: #1e1e1e;
+  user-select: none;
+}
+
+[data-container-id="breadcord-message-container"] {
+  flex: 1 1 auto;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-background);
+  overflow: hidden;
+}
+
+[data-type="message-header"] {
+  flex: 0 0 auto;
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--color-muted);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+  letter-spacing: 0.4px;
+  box-sizing: border-box;
+  height: 45px;
+}
+
+[data-type="message-status"] {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  color: var(--color-nav-text);
+  font-size: 14px;
+  border-bottom: 1px solid var(--color-muted-secondary);
+}
+
+[data-type="message-status"].is-loading::before {
+  content: "";
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--color-muted-secondary);
+  border-top-color: var(--color-primary);
+  animation: breadcord-spin 0.8s linear infinite;
+}
+
+[data-container-id="breadcord-message-list"] {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background-color: var(--color-background);
+}
+
+/* Base guild icon styling */
+[data-type^="guild-"] {
+  background-size: cover;
+  background-position: center;
+  border-radius: 8px;
+  height: 40px;
+  width: 40px;
+  margin-bottom: 8px;
+  text-align: center;
+  background-color: var(--color-muted-secondary);
+  font-weight: 500;
+  cursor: pointer;
+  overflow: hidden;
+  font-size: 14px;
+  line-height: 40px; /* centers text for normal guilds */
+}
+
+/* Base guild icon styling */
+[data-type^="guild-folderexpand-"] {
+  background-size: cover;
+  background-position: center;
+  border-radius: 8px;
+  height: 40px;
+  width: 40px;
+  margin-bottom: 8px;
+  background-color: transparent;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding-top: 11px;
+  pointer-events: none !important;
+  margin-bottom: 8px !important;
+  margin-top: 8px !important;
+  color: var(--color-text);
+}
+
+/* Adjust for iconless guilds (no background-image set) */
+[data-type^="guild-"]:not([style*="background-image"]) {
+  font-size: 12px;      /* smaller text */
+  line-height: 1.2;     /* normal text line height */
+  display: flex;        /* flexbox centering */
+  align-items: center;
+  justify-content: center;
+}
+
+/* COLLAPSED: 2×2 mini grid */
+[data-container-id^="guild-folder-"] {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  overflow: hidden;
+  gap: 2px;
+  box-sizing: border-box;
+  padding: 2px;
+  margin-bottom: 8px; /* folder gap requested */
+  cursor: pointer;    /* looks clickable */
+  margin-left: -2px;
+  margin-right: -2px;
+  padding-left: 2px !important;
+  background-color: var(--color-muted);
+}
+
+/* mini icons in folder */
+[data-container-id^="guild-folder-"] > [data-type^="guild-"] {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  line-height: 1;
+  font-size: 10px;   /* smaller text inside folder */
+  border-radius: 6px;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+}
+
+/* --- Collapsed visibility rules: show 2–5, hide 1 and 6+ --- */
+[data-container-id^="guild-folder-"] > :nth-child(1) {
+  display: none !important;     /* hide the first icon */
+}
+[data-container-id^="guild-folder-"] > :nth-child(n+6) {
+  display: none !important;     /* hide 6th and beyond */
+}
+
+/* While collapsed, disable child clicks to avoid accidental navigation */
+[data-container-id^="guild-folder-"]:not(.is-open) > [data-type^="guild-"] {
+  pointer-events: none;
+}
+
+/* EXPANDED: restore “normal” vertical list */
+[data-container-id^="guild-folder-"].is-open {
+  display: block;       /* stack children vertically */
+  width: auto;
+  height: auto;
+  padding: 0;
+  gap: 0;
+  overflow: visible;
+}
+
+/* Expanded: show everything, including the first and 6+ */
+[data-container-id^="guild-folder-"].is-open > :nth-child(1),
+[data-container-id^="guild-folder-"].is-open > :nth-child(n+6) {
+  display: block !important;
+}
+
+/* restore normal guild sizing & spacing when open */
+[data-container-id^="guild-folder-"].is-open > [data-type^="guild-"] {
+  width: 40px;
+  height: 40px;
+  margin: 0 0 8px 0;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 40px; /* center text on normal icons */
+  pointer-events: auto; /* re-enable clicks on items */
+}
+
+/* optional: nicer hover when open */
+[data-container-id^="guild-folder-"].is-open > [data-type^="guild-"]:hover {
+  filter: brightness(1.08);
+}
+
+[data-container-id="breadcord-app-sidebar"] {
+  flex: 0 0 300px;
+  min-width: 200px;
+  max-width: 500px;
+  overflow: auto;
+  background-color: var(--color-surface);
+  display: none;
+}
+
+[data-type="nav-btn-close"],
+[data-type="nav-btn-minimize"],
+[data-type="nav-btn-fullscreen"] {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: default;
+  padding: 0;
+  margin: 0;
+  transition: background 0.2s;
+  color: var(--color-nav-btn);
+  border-radius: 50%;
+  -webkit-app-region: no-drag;
+}
+[data-type^="nav-btn-"] svg {
+  display: block;
+}
+[data-type^="nav-btn-"]:hover {
+  background-color: var(--color-nav-highlight);
+}
+
+[data-type="nav-text"] {
+  font-weight: 500;
+  color: var(--color-nav-text);
+  font-size: 15px;
+
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  pointer-events: none; 
+}
+
+[data-type="bar"] {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-muted);
+  color: var(--color-text);
+}
+
+[data-container-id="breadcord"] {
+  width: 100%;
+  height: 100dvh;
+  background: var(--color-background);
+  overflow: hidden;
+  color: var(--color-text);
+}
+
+[data-container-id="breadcord-nav"] {
+  height: var(--breadcord-nav-height);
+  flex: 0 0 var(--breadcord-nav-height);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-muted);
+  color: var(--color-text);
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  position: relative;        
+  gap: 6px;    
+  padding: 0 6px;
+
+  -webkit-app-region: drag;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+[data-container-id="breadcord-app"] {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+[data-container-id="user-corner-profile-card"] {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  width: calc(var(--breadcord-channel-container-width) + var(--breadcord-server-container-width) - 16px);
+  border-radius: 5px;
+  background-color: var(--color-muted-secondary);
+  height: var(--user-corner-profile-card-height);
+  box-sizing: border-box;
+
+  background-size: auto 100%;
+  background-repeat: no-repeat;
+  background-position: right center;
+}
+
+/* When Spotify UI is active, make profile card corners square on top */
+.spotify-ui-active [data-container-id="user-corner-profile-card"] {
+  border-radius: 0 0 5px 5px;
+}
+
+[data-container-id="user-corner-profile-card-avatar"] {
+  position: absolute;
+  height: calc(var(--user-corner-profile-card-height) - 18px);
+  width: calc(var(--user-corner-profile-card-height) - 18px);
+  left: 9px;
+  top: 9px;
+
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  border-radius: 50%;
+}
+[data-container-id="user-corner-profile-card-avatar-decoration"] {
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  border-radius: 0;
+  height: calc(var(--user-corner-profile-card-height) - 10px);
+  width: calc(var(--user-corner-profile-card-height) - 10px);
+  position: relative;
+  top: -4px;
+  left: -4px;
+}
+[data-container-id="user-corner-profile-card-text"] {
+  height: calc(var(--user-corner-profile-card-height) - 18px);
+  width: 150px;
+  position: absolute;
+  top: calc((var(--user-corner-profile-card-height) - calc(var(--user-corner-profile-card-height) - 18px)) / 2);
+  left: calc(var(--user-corner-profile-card-height) - 10px + 9px);
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* centers vertically */
+}
+[data-type="user-corner-profile-card-text-name"] {
+  color: var(--color-text);
+  font-weight: 500;
+  font-size: 14px;
+}
+[data-type="user-corner-profile-card-text-status"] {
+  color: var(--color-highlight);
+  font-weight: 300;
+  font-size: 11px;
+}
+[data-type="user-corner-profile-card-settings-btn"] {
+  position: absolute;
+  right: 8px;
+  top: calc((var(--user-corner-profile-card-height) - 30px) / 2);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  box-sizing: border-box;
+  border-radius: 5px;
+  fill: var(--color-faded);
+  transition: background-color 0.1s ease;
+}
+
+[data-type="user-corner-profile-card-settings-btn"] svg {
+  width: 100%;
+  height: 100%;
+  display: block;                 /* avoid inline whitespace wiggles */
+  transition: transform 0.3s ease;
+  transform-origin: center;       /* <-- important */
+  transform-box: fill-box;        /* <-- important for SVGs */
+}
+
+[data-type="user-corner-profile-card-settings-btn"]:hover {
+  cursor: pointer;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-type="user-corner-profile-card-settings-btn"]:hover svg {
+  transform: rotate(180deg);
+}
+
+[data-type="user-corner-profile-card-plugins-btn"] {
+  position: absolute;
+  right: calc(8px + 30px + 5px);
+  top: calc((var(--user-corner-profile-card-height) - 30px) / 2);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border-radius: 5px;
+  fill: var(--color-faded);
+  transition: background-color 0.1s ease;
+}
+[data-type="user-corner-profile-card-plugins-btn"]:hover {
+  cursor: pointer;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+[data-type^="category-"] {
+  font-weight: 500;
+  color: var(--color-text);
+  font-size: 11px;
+  text-transform: uppercase;
+  box-sizing: border-box;
+  user-select: none;
+  margin-top: 5px;
+}
+[data-type="nav-current-location"] {
+  height: 45px;
+  width: 100%;
+  box-sizing: border-box;
+  border-bottom: 1px solid var(--color-muted);
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  font-weight: 500;
+  color: var(--color-text);
+  font-size: 15px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  position: sticky;
+}
+[data-container-id="sidebar-channels-list"] {
+  height: calc(100% - 45px);
+  overflow-x: hidden;
+  overflow-y: scroll;
+  padding: 5px;
+  padding-bottom: 100px;
+  box-sizing: border-box;
+}
+
+[data-container-id^="channel-"] {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding-left: 33px; 
+  width: 100%;
+  height: 30px;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+[data-container-id^="channel-"]:hover {
+  background-color: var(--color-muted);
+  cursor: pointer;
+}
+
+[data-container-id^="channel-"].is-selected {
+  background-color: var(--color-muted);
+}
+
+[data-container-id^="channel-"].is-selected [data-type^="channeltext-"] {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+[data-container-id^="channel-"].is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+[data-container-id^="channel-"].is-disabled:hover {
+  background-color: transparent;
+}
+
+[data-type^="channelicon-"] {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  fill: var(--color-nav-text);
+  transform: translateY(calc(-50% - 6px)) scale(0.8);
+}
+
+[data-type^="channeltext-"] {
+  flex: 1 1 auto;
+  min-width: 0; 
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 300;
+  color: var(--color-text);
+}
+
+.server-tooltip {
+  position: absolute;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 1000;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.server-tooltip--timestamp {
+  transform-origin: bottom center;
+}
+
+@keyframes breadcord-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

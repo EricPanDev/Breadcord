@@ -1,0 +1,8 @@
+{
+  "id": "breadcord_messagerenderer",
+  "name": "Breadcord Message Renderer",
+  "version": "1.0.0",
+  "description": "Breadcord Message Renderer",
+  "github": "https://github.com/ericpandev/breadcord",
+  "dependencies": ["breadcore"]
+}

@@ -1,0 +1,8 @@
+{
+    "id": "breadcord_ui_spotify",
+    "name": "Breadcord UI Spotify",
+    "version": "1.0.0",
+    "description": "The UI components for the Breadcord Spotify plugin for Breadcord UI. Requires the breadcord_spotify plugin to function.",
+    "github": "https://github.com/ericpandev/breadcord",
+    "dependencies": ["breadcache", "breadcord_ui", "breadcord_spotify"]
+}

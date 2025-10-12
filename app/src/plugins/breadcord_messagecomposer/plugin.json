@@ -1,0 +1,7 @@
+{
+  "id": "breadcord_messagecomposer",
+  "name": "Breadcord Message Composer",
+  "version": "1.0.0",
+  "description": "Adds a rich message composer with slash-command aware sending capabilities.",
+  "dependencies": ["breadcore", "breadcord_ui", "breadcord_messagerenderer"]
+}

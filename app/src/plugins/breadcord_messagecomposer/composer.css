@@ -1,0 +1,108 @@
+.breadcord-message-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 18px 18px;
+  /* background: var(--bc-composer-bg, rgba(22, 25, 30, 0.92)); */
+  /* border-top: 1px solid rgba(255, 255, 255, 0.04); */
+  backdrop-filter: blur(12px);
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.breadcord-message-composer.is-dragover {
+  /* border-color: rgba(114, 137, 218, 0.55); */
+  /* background: var(--bc-composer-bg-active, rgba(30, 34, 43, 0.94)); */
+}
+
+.breadcord-message-composer.is-sending {
+  opacity: 0.75;
+}
+
+.breadcord-message-composer__attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.breadcord-message-composer__attachment {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--color-text, #f3f4f5);
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.breadcord-message-composer__attachment-name {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.breadcord-message-composer__attachment-remove {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: background-color 120ms ease, opacity 120ms ease;
+}
+
+.breadcord-message-composer__attachment-remove:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.breadcord-message-composer__attachment-remove:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.breadcord-message-composer__textarea {
+  resize: none;
+  width: 100%;
+  min-height: 44px;
+  max-height: 220px;
+  line-height: 1.45;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--color-text, #f3f4f5);
+  font-size: 15px;
+  font-family: inherit;
+  transition: border-color 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
+  box-sizing: border-box;
+}
+
+.breadcord-message-composer__textarea::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.breadcord-message-composer__textarea:focus {
+  outline: none;
+  background: rgba(0, 0, 0, 0.5);
+  border-color: rgba(114, 137, 218, 0.65);
+  box-shadow: 0 0 0 2px rgba(114, 137, 218, 0.2);
+}
+
+.breadcord-message-composer__textarea.is-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.breadcord-message-composer__error {
+  color: #ff7b7b;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.breadcord-message-composer__error[hidden] {
+  display: none;
+}

@@ -1,0 +1,236 @@
+const { contextBridge, ipcRenderer } = require('electron');
+
+async function getPlugins() {
+  return await ipcRenderer.invoke('plugins:list');
+}
+
+async function reconnect_ws() {
+  return await ipcRenderer.invoke('websocket:reconnect');
+}
+
+window.addEventListener('keydown', async (e) => {
+  // You can customize the reload key, e.g. F5 or Ctrl+R
+  if (
+    (e.key === 'F5') ||
+    (e.key === 'r' && (e.ctrlKey || e.metaKey))
+  ) {
+    e.preventDefault();
+    await reconnect_ws();
+    window.location.reload();
+  }
+});
+
+function fetch_token() {
+    const iframe = document.createElement('iframe');
+            
+    iframe.onload = () => {
+        try {
+            const token = iframe.contentWindow.localStorage.getItem('token');
+            ipcRenderer.send('token-found', token);
+        }
+        catch (err) {}
+        finally {
+            iframe.remove();
+        }
+    };
+
+    document.body.appendChild(iframe);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+
+    if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+        if (window.location.hostname === 'discord.com') {
+            fetch_token();
+        }
+    }
+
+    if (window.location.protocol === 'file:') {}
+});
+let lastUrl = window.location.href;
+
+setInterval(() => {
+    if (window.location.href !== lastUrl) {
+        lastUrl = window.location.href;
+        if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+            if (window.location.hostname === 'discord.com') {
+                fetch_token();
+            }
+        }
+    }
+}, 50);
+
+function logToMain(level, text) {
+  ipcRenderer.send('log', text);
+}
+const consoleLog = console.log.bind(console);
+console.log = (...args) => {
+  consoleLog(...args);
+  logToMain('info', args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' '));
+};
+
+function createEmitter() {
+  const map = new Map();
+  return {
+    on(ev, fn) { if (!map.has(ev)) map.set(ev, new Set()); map.get(ev).add(fn); },
+    off(ev, fn) { map.get(ev)?.delete(fn); },
+    emit(ev, data) { map.get(ev)?.forEach(fn => fn(data)); },
+  };
+}
+
+let _resolveReady;
+const ready = new Promise(r => (_resolveReady = r));
+queueMicrotask(() => _resolveReady());
+
+// ------- BreadAPI class & facade -------
+const { EventEmitter } = require('events');
+function createEmitter() {
+  const ee = new EventEmitter();
+  return {
+    on(event, fn) {
+      ee.on(event, fn);
+      return () => ee.off(event, fn);
+    },
+    off(event, fn) { ee.off(event, fn); },
+    emit(event, ...args) { ee.emit(event, ...args); },
+  };
+}
+
+var plugins = [];
+
+getPlugins().then(list => {
+  plugins.push(...list);
+
+  class BreadAPIClass {
+    static version = "1.0.0";
+    static plugins = plugins;
+
+    static info(message) { logToMain('info', `[BreadAPI] [Info] ${message}`);}
+
+    static alert(message) { logToMain('alert', `[BreadAPI] [Alert] ${message}`); }
+
+    // per-renderer event bus
+    static _em = createEmitter();
+    static on(...a) { return this._em.on(...a); }
+    static off(...a) { return this._em.off(...a); }
+    static emit(...a) { return this._em.emit(...a); }
+
+    // --- gateway sub-API ---
+    static _gatewayEm = createEmitter();
+    static gateway = {
+      on_message(fn) {
+        return BreadAPIClass._gatewayEm.on('message', fn);
+      },
+      off_message(fn) {
+        BreadAPIClass._gatewayEm.off('message', fn);
+      },
+      once_message(fn) {
+        const off = BreadAPIClass._gatewayEm.on('message', function handler(p) {
+          off(); fn(p);
+        });
+        return off;
+      },
+    };
+  }
+
+  // bridge IPC -> gateway emitter
+  ipcRenderer.on('discord-gateway-message', (_event, payload) => {
+    BreadAPIClass._gatewayEm.emit('message', payload);
+  });
+
+  BreadAPIClass.app = {
+    close() {
+      ipcRenderer.send('close');
+    },
+    maximize() {
+      ipcRenderer.send('maximize');
+    },
+    minimize() {
+      ipcRenderer.send('minimize');
+    },
+  };
+
+  const BreadAPI = {
+    version: BreadAPIClass.version,
+    info: BreadAPIClass.info,
+    alert: BreadAPIClass.alert,
+    on: BreadAPIClass.on.bind(BreadAPIClass),
+    off: BreadAPIClass.off.bind(BreadAPIClass),
+    emit: BreadAPIClass.emit.bind(BreadAPIClass),
+    ready,
+    gateway: {
+      send: (payload) => ipcRenderer.invoke('gateway:send', payload),
+      on_message: BreadAPIClass.gateway.on_message,
+      off_message: BreadAPIClass.gateway.off_message,
+      once_message: BreadAPIClass.gateway.once_message,
+    },
+    plugins: BreadAPIClass.plugins,
+    app: {
+      close: BreadAPIClass.app.close,
+      maximize: BreadAPIClass.app.maximize,
+      minimize: BreadAPIClass.app.minimize,
+    },
+    rest: {
+      request: async (options = {}) => {
+        const result = await ipcRenderer.invoke('discord-rest', options);
+        if (!result || typeof result !== 'object') {
+          throw new Error('Invalid response from discord-rest');
+        }
+        if (!result.ok) {
+          const segments = [];
+          if (typeof result.status !== 'undefined') {
+            segments.push(`status ${result.status}`);
+          }
+          if (result.error) {
+            segments.push(result.error);
+          }
+          if (!result.error && result.data && typeof result.data === 'object' && typeof result.data.message === 'string') {
+            segments.push(result.data.message);
+          }
+          let serializedPayload = null;
+          if (result.data && typeof result.data !== 'undefined') {
+            try {
+              serializedPayload = typeof result.data === 'string'
+                ? result.data
+                : JSON.stringify(result.data, null, 2);
+            } catch {
+              serializedPayload = String(result.data);
+            }
+          }
+          if (serializedPayload && serializedPayload.length && serializedPayload !== result.error) {
+            const trimmed = serializedPayload.length > 2000 ? `${serializedPayload.slice(0, 2000)}…` : serializedPayload;
+            segments.push(trimmed);
+          }
+
+          const message = segments.length
+            ? `Discord REST request failed (${segments.join(' | ')})`
+            : `Discord REST request failed (status ${result.status ?? 'unknown'})`;
+
+          const error = new Error(message);
+          error.status = result.status;
+          error.data = result.data;
+          error.headers = result.headers;
+          error.result = result;
+          throw error;
+        }
+        return result;
+      },
+    },
+  };
+
+  function deepFreeze(obj) {
+  Object.getOwnPropertyNames(obj).forEach((prop) => {
+      if (
+        obj[prop] !== null &&
+        (typeof obj[prop] === 'object' || typeof obj[prop] === 'function')
+      ) {
+        deepFreeze(obj[prop]);
+      }
+    });
+    return Object.freeze(obj);
+  }
+
+  deepFreeze(BreadAPI);
+
+  contextBridge.exposeInMainWorld('BreadAPI', BreadAPI);
+});
