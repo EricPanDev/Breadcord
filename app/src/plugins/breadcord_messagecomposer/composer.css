@@ -125,8 +125,9 @@
   padding: 8px 10px;
   text-align: left;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
   cursor: pointer;
   transition: background-color 120ms ease, transform 120ms ease;
 }
@@ -137,6 +138,22 @@
 
 .breadcord-message-composer__slash-command:active {
   transform: translateY(1px);
+}
+
+.breadcord-message-composer__slash-command-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.breadcord-message-composer__slash-command-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
 }
 
 .breadcord-message-composer__slash-command-name {

@@ -2046,10 +2046,10 @@
       composerState.slashActiveAppId = null;
       return;
     }
-    if (composerState.slashActiveAppId && entry.groups.some((group) => group.applicationId === composerState.slashActiveAppId)) {
+    if (composerState.slashActiveAppId && (composerState.slashActiveAppId === '__all__' || entry.groups.some((group) => group.applicationId === composerState.slashActiveAppId))) {
       return;
     }
-    composerState.slashActiveAppId = entry.groups[0].applicationId;
+    composerState.slashActiveAppId = '__all__';
   }
 
   function filterCommandsByQuery(commands, query) {
@@ -2242,30 +2242,65 @@
     }
 
     const query = (composerState.slashQuery || '').toLowerCase();
-    let activeGroup = groups.find((group) => group.applicationId === composerState.slashActiveAppId) || groups[0];
     
-    // Expand commands with subcommands
-    const expandedCommands = expandCommandsWithSubcommands(activeGroup.commands);
-    let filteredCommands = filterCommandsByQuery(expandedCommands, query);
+    // Handle "All" tab
+    let activeGroup;
+    let filteredCommands = [];
+    
+    if (composerState.slashActiveAppId === '__all__') {
+      // Show all commands from all groups
+      const allCommands = groups.flatMap(group => 
+        expandCommandsWithSubcommands(group.commands).map(cmd => ({
+          ...cmd,
+          _groupName: group.applicationName,
+          _groupId: group.applicationId
+        }))
+      );
+      filteredCommands = filterCommandsByQuery(allCommands, query);
+      activeGroup = { applicationId: '__all__', applicationName: 'All', commands: allCommands };
+    } else {
+      activeGroup = groups.find((group) => group.applicationId === composerState.slashActiveAppId) || groups[0];
+      
+      // Expand commands with subcommands
+      const expandedCommands = expandCommandsWithSubcommands(activeGroup.commands);
+      filteredCommands = filterCommandsByQuery(expandedCommands, query);
 
-    if (!composerState.slashActiveAppId || composerState.slashActiveAppId !== activeGroup.applicationId) {
-      composerState.slashActiveAppId = activeGroup.applicationId;
-    }
+      if (!composerState.slashActiveAppId || composerState.slashActiveAppId !== activeGroup.applicationId) {
+        composerState.slashActiveAppId = activeGroup.applicationId;
+      }
 
-    if (query && filteredCommands.length === 0) {
-      const fallback = groups.find((group) => {
-        const expanded = expandCommandsWithSubcommands(group.commands);
-        return filterCommandsByQuery(expanded, query).length > 0;
-      });
-      if (fallback) {
-        composerState.slashActiveAppId = fallback.applicationId;
-        activeGroup = fallback;
-        const expandedFallback = expandCommandsWithSubcommands(activeGroup.commands);
-        filteredCommands = filterCommandsByQuery(expandedFallback, query);
+      if (query && filteredCommands.length === 0) {
+        const fallback = groups.find((group) => {
+          const expanded = expandCommandsWithSubcommands(group.commands);
+          return filterCommandsByQuery(expanded, query).length > 0;
+        });
+        if (fallback) {
+          composerState.slashActiveAppId = fallback.applicationId;
+          activeGroup = fallback;
+          const expandedFallback = expandCommandsWithSubcommands(activeGroup.commands);
+          filteredCommands = filterCommandsByQuery(expandedFallback, query);
+        }
       }
     }
 
     composerState.slashTabs.innerHTML = '';
+    
+    // Add "All" tab
+    const allTab = document.createElement('button');
+    allTab.type = 'button';
+    allTab.className = `${COMPOSER_CLASS}__slash-tab`;
+    allTab.textContent = 'All';
+    if (composerState.slashActiveAppId === '__all__') {
+      allTab.classList.add('is-active');
+    }
+    allTab.addEventListener('click', () => {
+      if (composerState.slashActiveAppId === '__all__') return;
+      composerState.slashActiveAppId = '__all__';
+      renderSlashMenuFromData(entry);
+    });
+    composerState.slashTabs.appendChild(allTab);
+    
+    // Add other tabs
     for (const group of groups) {
       const tab = document.createElement('button');
       tab.type = 'button';
@@ -2297,19 +2332,38 @@
       item.className = `${COMPOSER_CLASS}__slash-command`;
       item.addEventListener('click', () => handleSlashCommandSelection(command));
 
+      // Add bot avatar
+      const appMeta = command.__breadcordApplication || command.application;
+      if (appMeta && appMeta.icon) {
+        const avatar = document.createElement('img');
+        avatar.className = `${COMPOSER_CLASS}__slash-command-avatar`;
+        const extension = appMeta.icon.startsWith('a_') ? 'gif' : 'png';
+        avatar.src = `https://cdn.discordapp.com/app-icons/${appMeta.id}/${appMeta.icon}.${extension}?size=32`;
+        avatar.alt = '';
+        avatar.onerror = () => {
+          avatar.src = 'https://cdn.discordapp.com/embed/avatars/0.png';
+        };
+        item.appendChild(avatar);
+      }
+
+      // Create text container
+      const textContainer = document.createElement('div');
+      textContainer.className = `${COMPOSER_CLASS}__slash-command-text`;
+
       const nameEl = document.createElement('span');
       nameEl.className = `${COMPOSER_CLASS}__slash-command-name`;
       nameEl.textContent = `/${normalizeCommandName(command)}`;
-      item.appendChild(nameEl);
+      textContainer.appendChild(nameEl);
 
       const description = normalizeCommandDescription(command);
       if (description) {
         const descriptionEl = document.createElement('span');
         descriptionEl.className = `${COMPOSER_CLASS}__slash-command-description`;
         descriptionEl.textContent = description;
-        item.appendChild(descriptionEl);
+        textContainer.appendChild(descriptionEl);
       }
 
+      item.appendChild(textContainer);
       composerState.slashCommandsContainer.appendChild(item);
     }
   }

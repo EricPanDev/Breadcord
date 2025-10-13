@@ -364,6 +364,105 @@
   width: auto;
   height: auto;
 }
+
+/* Video and audio attachments */
+.breadcord-message__attachment-video {
+  display: block;
+  max-width: 100%;
+  width: 100%;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  max-height: 500px;
+  object-fit: contain;
+}
+
+/* Custom Audio Player */
+.breadcord-audio-player {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.breadcord-audio-player__play-btn {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(114, 137, 218, 0.9);
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 120ms ease, transform 60ms ease;
+}
+
+.breadcord-audio-player__play-btn:hover {
+  background: rgba(114, 137, 218, 1);
+  transform: scale(1.05);
+}
+
+.breadcord-audio-player__play-btn:active {
+  transform: scale(0.95);
+}
+
+.breadcord-audio-player__progress-container {
+  flex: 1;
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+.breadcord-audio-player__progress-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.breadcord-audio-player__progress-fill {
+  height: 100%;
+  background: rgba(114, 137, 218, 0.9);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 100ms linear;
+}
+
+.breadcord-audio-player__time {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'Consolas', 'Monaco', monospace;
+  min-width: 85px;
+  text-align: center;
+}
+
+.breadcord-audio-player__volume-btn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.breadcord-audio-player__volume-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
 /* cap attachment image height */
 .breadcord-message__embed-thumb,
 .breadcord-message__embed-image,
