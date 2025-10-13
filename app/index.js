@@ -294,7 +294,98 @@ function getPlugins() {
     return [];
   }
 }
+
+function getPluginConfigPath() {
+  return path.join(app.getPath('userData'), 'plugin-config.json');
+}
+
+function loadPluginConfig() {
+  const configPath = getPluginConfigPath();
+  try {
+    if (fs.existsSync(configPath)) {
+      const data = fs.readFileSync(configPath, 'utf8');
+      return JSON.parse(data);
+    }
+  } catch (e) {
+    console.error('[BreadAPI] Failed to load plugin config:', e);
+  }
+  // Default: all plugins enabled
+  return { enabled: getPlugins() };
+}
+
+function savePluginConfig(config) {
+  const configPath = getPluginConfigPath();
+  try {
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
+    return true;
+  } catch (e) {
+    console.error('[BreadAPI] Failed to save plugin config:', e);
+    throw e;
+  }
+}
+
 ipcMain.handle('plugins:list', async () => getPlugins());
+ipcMain.handle('plugins:get-config', async () => loadPluginConfig());
+ipcMain.handle('plugins:save-config', async (_event, config) => {
+  savePluginConfig(config);
+  return { success: true };
+});
+ipcMain.handle('app:restart', async () => {
+  app.relaunch();
+  app.exit(0);
+});
+ipcMain.handle('app:minimize', async () => {
+  const focusedWindow = BrowserWindow.getFocusedWindow();
+  if (focusedWindow) focusedWindow.minimize();
+});
+ipcMain.handle('app:maximize', async () => {
+  const focusedWindow = BrowserWindow.getFocusedWindow();
+  if (focusedWindow) {
+    if (focusedWindow.isMaximized()) {
+      focusedWindow.unmaximize();
+    } else {
+      focusedWindow.maximize();
+    }
+  }
+});
+ipcMain.handle('app:open-plugins', async () => {
+  createPluginWindow();
+});
+
+function createPluginWindow() {
+  // Check if plugin window already exists
+  const existingWindow = BrowserWindow.getAllWindows().find(
+    win => win.webContents.getURL().includes('plugins.html')
+  );
+  
+  if (existingWindow) {
+    existingWindow.focus();
+    return;
+  }
+
+  const pluginWindow = new BrowserWindow({
+    width: 900,
+    height: 700,
+    minWidth: 600,
+    minHeight: 400,
+    backgroundColor: '#1c1713',
+    frame: false,
+    fullscreenable: false,
+    transparent: false,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js')
+    }
+  });
+
+  pluginWindow.loadFile(path.join(__dirname, 'src', 'plugins.html'));
+
+  // Open DevTools in development
+  if (process.env.NODE_ENV === 'development') {
+    pluginWindow.webContents.openDevTools();
+  }
+}
 ipcMain.handle('discord-rest', async (_event, request = {}) => {
   const {
     method = 'GET',

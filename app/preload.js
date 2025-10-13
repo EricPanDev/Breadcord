@@ -18,6 +18,12 @@ window.addEventListener('keydown', async (e) => {
     await reconnect_ws();
     window.location.reload();
   }
+  
+  // Open plugin manager with Ctrl/Cmd + Shift + P
+  if (e.key === 'p' && (e.ctrlKey || e.metaKey) && e.shiftKey) {
+    e.preventDefault();
+    ipcRenderer.invoke('app:open-plugins');
+  }
 });
 
 function fetch_token() {
@@ -233,4 +239,13 @@ getPlugins().then(list => {
   deepFreeze(BreadAPI);
 
   contextBridge.exposeInMainWorld('BreadAPI', BreadAPI);
+  
+  // Expose plugin management APIs for plugins.html
+  contextBridge.exposeInMainWorld('electronAPI', {
+    getPluginConfig: () => ipcRenderer.invoke('plugins:get-config'),
+    savePluginConfig: (config) => ipcRenderer.invoke('plugins:save-config', config),
+    restartApp: () => ipcRenderer.invoke('app:restart'),
+    minimize: () => ipcRenderer.invoke('app:minimize'),
+    maximize: () => ipcRenderer.invoke('app:maximize'),
+  });
 });

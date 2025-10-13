@@ -1,0 +1,7 @@
+{
+  "id": "sapphire_integration",
+  "name": "Sapphire Integration",
+  "version": "1.0.0",
+  "description": "Show warns/kicks/bans on member profiles using a hosted ericpandev/sapphire_api instance.",
+  "dependencies": ["breadcore", "breadcord_messagerenderer"]
+}

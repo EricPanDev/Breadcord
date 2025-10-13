@@ -103,7 +103,22 @@ async function determinePluginLoadOrder(pluginNames, pluginsRoot = 'plugins') {
 
 BreadAPI.ready.then(async () => {
   BreadAPI.info('Breadcord ready, found ' + BreadAPI.plugins.length + ' plugin(s): ' + BreadAPI.plugins.join(', '));
-  const loadOrder = (await determinePluginLoadOrder(BreadAPI.plugins));
+  
+  // Load plugin configuration to determine which plugins to load
+  let enabledPlugins = BreadAPI.plugins;
+  try {
+    if (window.electronAPI && window.electronAPI.getPluginConfig) {
+      const config = await window.electronAPI.getPluginConfig();
+      if (config && Array.isArray(config.enabled)) {
+        enabledPlugins = config.enabled.filter(p => BreadAPI.plugins.includes(p));
+        BreadAPI.info('Plugin config loaded, ' + enabledPlugins.length + ' enabled: ' + enabledPlugins.join(', '));
+      }
+    }
+  } catch (e) {
+    BreadAPI.info('No plugin config found, loading all plugins');
+  }
+  
+  const loadOrder = (await determinePluginLoadOrder(enabledPlugins));
   BreadAPI.info('Resolved load order: ' + loadOrder.join(', '));
   for (const plugin of loadOrder) {
     await load_plugin(plugin);

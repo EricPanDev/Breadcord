@@ -1,1 +1,769 @@
-<!-- Breadcord User Plugin Manager -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Breadcord - Plugin Manager</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #1e1e1e;
+      color: #dcddde;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .titlebar {
+      height: 32px;
+      flex: 0 0 32px;
+      background: #1c1713;
+      border-bottom: 1px solid #3c2f26;
+      color: #f5efe7;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      position: relative;
+      gap: 6px;
+      padding: 0 6px;
+      -webkit-app-region: drag;
+      user-select: none;
+    }
+
+    .titlebar-controls {
+      display: flex;
+      gap: 6px;
+      -webkit-app-region: no-drag;
+    }
+
+    .titlebar-btn {
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      cursor: default;
+      padding: 0;
+      margin: 0;
+      transition: background 0.2s;
+      color: #a08a71;
+      border-radius: 50%;
+      background: transparent;
+      -webkit-app-region: no-drag;
+    }
+
+    .titlebar-btn:hover {
+      background-color: #5e4b33;
+    }
+
+    .titlebar-btn svg {
+      display: block;
+    }
+
+    .titlebar-title {
+      font-weight: 500;
+      color: #a08a71;
+      font-size: 15px;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    .header {
+      margin-bottom: 24px;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: #96989d;
+      font-size: 14px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 200px;
+      background: #2f3136;
+      border: 1px solid #202225;
+      border-radius: 4px;
+      padding: 8px 12px;
+      color: #dcddde;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-box:focus {
+      border-color: #7289da;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: #7289da;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #677bc4;
+    }
+
+    .btn-secondary {
+      background: #4f545c;
+      color: #dcddde;
+    }
+
+    .btn-secondary:hover {
+      background: #5d6269;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .stats {
+      display: flex;
+      gap: 16px;
+      font-size: 13px;
+      color: #96989d;
+    }
+
+    .plugins-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 16px;
+    }
+
+    .plugin-card {
+      background: #2f3136;
+      border-radius: 8px;
+      padding: 16px;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .plugin-card.enabled {
+      border-color: #43b581;
+    }
+
+    .plugin-card.disabled {
+      opacity: 0.6;
+    }
+
+    .plugin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 12px;
+      gap: 12px;
+    }
+
+    .plugin-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .plugin-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .plugin-name {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .plugin-id {
+      font-size: 12px;
+      color: #96989d;
+      font-family: 'Courier New', monospace;
+    }
+
+    .plugin-version {
+      display: inline-block;
+      background: #202225;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      color: #96989d;
+      font-weight: 500;
+    }
+
+    .plugin-description {
+      font-size: 14px;
+      color: #b9bbbe;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .plugin-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: #96989d;
+    }
+
+    .plugin-dependencies {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .dependency-tag {
+      background: #202225;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      color: #b9bbbe;
+      font-family: 'Courier New', monospace;
+    }
+
+    .plugin-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 42px;
+      height: 24px;
+      background: #72767d;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch.enabled {
+      background: #43b581;
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    .toggle-switch.enabled::after {
+      transform: translateX(18px);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-core {
+      background: #7289da;
+      color: white;
+    }
+
+    .badge-required {
+      background: #f04747;
+      color: white;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 48px;
+      color: #96989d;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #2f3136;
+      border-top-color: #7289da;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px;
+      color: #96989d;
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .alert {
+      background: #faa81a;
+      color: #1e1e1e;
+      padding: 12px 16px;
+      border-radius: 4px;
+      margin-bottom: 24px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .alert-error {
+      background: #f04747;
+      color: white;
+    }
+
+    .alert-success {
+      background: #43b581;
+      color: white;
+    }
+
+    ::-webkit-scrollbar {
+      width: 12px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #2f3136;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #202225;
+      border-radius: 6px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #18191c;
+    }
+  </style>
+</head>
+<body>
+  <div class="titlebar">
+    <div class="titlebar-controls">
+      <button class="titlebar-btn close" onclick="window.close()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M18.3 5.71a1 1 0 0 0-1.41 0L12 10.59 7.11 5.7A1 1 0 0 0 5.7 7.11L10.59 12l-4.9 4.89a1 1 0 1 0 1.41 1.41L12 13.41l4.89 4.9a1 1 0 0 0 1.41-1.42L13.41 12l4.9-4.89a1 1 0 0 0-.01-1.4z"/>
+        </svg>
+      </button>
+      <button class="titlebar-btn minimize" onclick="minimizeWindow()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="5" y="11" width="14" height="2" rx="1" />
+        </svg>
+      </button>
+      <button class="titlebar-btn maximize" onclick="maximizeWindow()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+          <g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 3 3 3 3 9"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <polyline points="9 21 3 21 3 15"/>
+            <polyline points="15 21 21 21 21 15"/>
+          </g>
+        </svg>
+      </button>
+    </div>
+    <div class="titlebar-title">Breadcord - Plugin Manager</div>
+  </div>
+
+  <div class="container">
+    <div class="header">
+      <h1>Plugin Manager</h1>
+      <p>Manage your Breadcord plugins. Changes require an app restart to take effect.</p>
+    </div>
+
+    <div id="alert-container"></div>
+
+    <div class="toolbar">
+      <input type="text" class="search-box" id="search" placeholder="Search plugins...">
+      <div class="stats">
+        <span id="enabled-count">0 enabled</span>
+        <span id="total-count">0 total</span>
+      </div>
+      <button class="btn btn-primary" onclick="saveAndRestart()" id="save-btn" disabled>
+        Save & Restart
+      </button>
+      <button class="btn btn-secondary" onclick="resetChanges()" id="reset-btn" disabled>
+        Reset
+      </button>
+    </div>
+
+    <div id="plugins-container">
+      <div class="loading">
+        <div class="loading-spinner"></div>
+        <p>Loading plugins...</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allPlugins = [];
+    let pluginStates = new Map(); // Current states (enabled/disabled)
+    let originalStates = new Map(); // Original states for reset
+    let hasChanges = false;
+
+    // Initialize
+    async function init() {
+      try {
+        await loadPlugins();
+        setupEventListeners();
+      } catch (err) {
+        showAlert('Failed to load plugins: ' + err.message, 'error');
+        console.error(err);
+      }
+    }
+
+    async function loadPlugins() {
+      try {
+        // Get all available plugins
+        const availablePlugins = await BreadAPI.plugins;
+        
+        // Get enabled plugins config
+        const config = await window.electronAPI.getPluginConfig();
+        const enabledPlugins = new Set(config.enabled || availablePlugins);
+
+        // Fetch metadata for each plugin
+        allPlugins = await Promise.all(
+          availablePlugins.map(async (pluginId) => {
+            try {
+              const response = await fetch(`plugins/${pluginId}/plugin.json`);
+              const metadata = await response.json();
+              const isEnabled = enabledPlugins.has(pluginId);
+              
+              // Check if icon exists
+              let hasIcon = false;
+              try {
+                const iconResponse = await fetch(`plugins/${pluginId}/icon.png`, { method: 'HEAD' });
+                hasIcon = iconResponse.ok;
+              } catch {
+                hasIcon = false;
+              }
+              
+              pluginStates.set(pluginId, isEnabled);
+              originalStates.set(pluginId, isEnabled);
+              
+              return {
+                ...metadata,
+                id: metadata.id || pluginId,
+                enabled: isEnabled,
+                hasIcon: hasIcon,
+              };
+            } catch (err) {
+              console.error(`Failed to load metadata for ${pluginId}:`, err);
+              const isEnabled = enabledPlugins.has(pluginId);
+              pluginStates.set(pluginId, isEnabled);
+              originalStates.set(pluginId, isEnabled);
+              
+              return {
+                id: pluginId,
+                name: pluginId,
+                version: 'unknown',
+                description: 'Plugin metadata not available',
+                dependencies: [],
+                enabled: isEnabled,
+                hasIcon: false,
+              };
+            }
+          })
+        );
+
+        renderPlugins();
+        updateStats();
+      } catch (err) {
+        throw new Error('Failed to load plugin data: ' + err.message);
+      }
+    }
+
+    function renderPlugins(filter = '') {
+      const container = document.getElementById('plugins-container');
+      const searchTerm = filter.toLowerCase();
+      
+      const filteredPlugins = allPlugins.filter(plugin => 
+        plugin.name.toLowerCase().includes(searchTerm) ||
+        plugin.id.toLowerCase().includes(searchTerm) ||
+        (plugin.description || '').toLowerCase().includes(searchTerm)
+      );
+
+      if (filteredPlugins.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🔍</div>
+            <p>No plugins found matching "${filter}"</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="plugins-grid">
+          ${filteredPlugins.map(plugin => renderPluginCard(plugin)).join('')}
+        </div>
+      `;
+    }
+
+    function renderPluginCard(plugin) {
+      const isEnabled = pluginStates.get(plugin.id);
+      const isCore = isCorePlugin(plugin.id);
+      const isRequired = isRequiredByEnabled(plugin.id);
+      const canDisable = !isCore && !isRequired;
+
+      return `
+        <div class="plugin-card ${isEnabled ? 'enabled' : 'disabled'}">
+          <div class="plugin-header">
+            ${plugin.hasIcon ? `
+              <img src="plugins/${escapeHtml(plugin.id)}/icon.png" class="plugin-icon" alt="${escapeHtml(plugin.name)} icon">
+            ` : ''}
+            <div class="plugin-info">
+              <div class="plugin-name">
+                ${escapeHtml(plugin.name)}
+                <span class="plugin-version">v${escapeHtml(plugin.version)}</span>
+              </div>
+              <div class="plugin-id">${escapeHtml(plugin.id)}</div>
+            </div>
+            <div 
+              class="toggle-switch ${isEnabled ? 'enabled' : ''}" 
+              onclick="togglePlugin('${escapeHtml(plugin.id)}')"
+              style="${!canDisable ? 'opacity: 0.5; cursor: not-allowed;' : ''}"
+              title="${!canDisable ? (isCore ? 'Core plugin cannot be disabled' : 'Required by other enabled plugins') : 'Click to toggle'}"
+            ></div>
+          </div>
+          
+          <div class="plugin-description">
+            ${escapeHtml(plugin.description || 'No description available')}
+          </div>
+          
+          ${plugin.dependencies && plugin.dependencies.length > 0 ? `
+            <div class="plugin-meta">
+              <span><strong>Dependencies:</strong></span>
+            </div>
+            <div class="plugin-dependencies">
+              ${plugin.dependencies.map(dep => 
+                `<span class="dependency-tag">${escapeHtml(dep)}</span>`
+              ).join('')}
+            </div>
+          ` : ''}
+          
+          <div class="plugin-meta">
+            ${isCore ? '<span class="badge badge-core">Core</span>' : ''}
+            ${isRequired ? '<span class="badge badge-required">Required</span>' : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function togglePlugin(pluginId) {
+      const plugin = allPlugins.find(p => p.id === pluginId);
+      if (!plugin) return;
+
+      const isCore = isCorePlugin(pluginId);
+      const isRequired = isRequiredByEnabled(pluginId);
+      
+      if (isCore || isRequired) {
+        const reason = isCore ? 'Core plugins cannot be disabled.' : 'This plugin is required by other enabled plugins.';
+        showAlert(reason, 'error');
+        return;
+      }
+
+      const currentState = pluginStates.get(pluginId);
+      const newState = !currentState;
+
+      // If enabling, check if dependencies are enabled
+      if (newState && plugin.dependencies && plugin.dependencies.length > 0) {
+        const missingDeps = plugin.dependencies.filter(dep => !pluginStates.get(dep));
+        if (missingDeps.length > 0) {
+          showAlert(
+            `Cannot enable ${plugin.name}. Missing dependencies: ${missingDeps.join(', ')}`,
+            'error'
+          );
+          return;
+        }
+      }
+
+      // If disabling, check if other enabled plugins depend on it
+      if (!newState) {
+        const dependentPlugins = allPlugins.filter(p => 
+          pluginStates.get(p.id) && 
+          p.dependencies && 
+          p.dependencies.includes(pluginId)
+        );
+        
+        if (dependentPlugins.length > 0) {
+          showAlert(
+            `Cannot disable ${plugin.name}. Required by: ${dependentPlugins.map(p => p.name).join(', ')}`,
+            'error'
+          );
+          return;
+        }
+      }
+
+      pluginStates.set(pluginId, newState);
+      checkForChanges();
+      renderPlugins(document.getElementById('search').value);
+      updateStats();
+    }
+
+    function isCorePlugin(pluginId) {
+      return pluginId === 'breadcore' || pluginId === 'breadcache' || pluginId === 'breadcord_ui';
+    }
+
+    function isRequiredByEnabled(pluginId) {
+      return allPlugins.some(plugin => 
+        pluginStates.get(plugin.id) && 
+        plugin.dependencies && 
+        plugin.dependencies.includes(pluginId)
+      );
+    }
+
+    function checkForChanges() {
+      hasChanges = false;
+      for (const [id, state] of pluginStates) {
+        if (state !== originalStates.get(id)) {
+          hasChanges = true;
+          break;
+        }
+      }
+      
+      document.getElementById('save-btn').disabled = !hasChanges;
+      document.getElementById('reset-btn').disabled = !hasChanges;
+      
+      if (hasChanges) {
+        showAlert('You have unsaved changes. Click "Save & Restart" to apply them.', 'warning');
+      } else {
+        clearAlert();
+      }
+    }
+
+    function resetChanges() {
+      pluginStates = new Map(originalStates);
+      hasChanges = false;
+      renderPlugins(document.getElementById('search').value);
+      updateStats();
+      checkForChanges();
+      showAlert('Changes have been reset.', 'success');
+      setTimeout(clearAlert, 2000);
+    }
+
+    async function saveAndRestart() {
+      try {
+        const enabledPlugins = Array.from(pluginStates.entries())
+          .filter(([_, enabled]) => enabled)
+          .map(([id, _]) => id);
+
+        await window.electronAPI.savePluginConfig({ enabled: enabledPlugins });
+        showAlert('Saved! Restarting application...', 'success');
+        
+        setTimeout(() => {
+          window.electronAPI.restartApp();
+        }, 1000);
+      } catch (err) {
+        showAlert('Failed to save configuration: ' + err.message, 'error');
+        console.error(err);
+      }
+    }
+
+    function updateStats() {
+      const enabledCount = Array.from(pluginStates.values()).filter(Boolean).length;
+      const totalCount = allPlugins.length;
+      
+      document.getElementById('enabled-count').textContent = `${enabledCount} enabled`;
+      document.getElementById('total-count').textContent = `${totalCount} total`;
+    }
+
+    function setupEventListeners() {
+      const searchBox = document.getElementById('search');
+      let debounceTimer;
+      
+      searchBox.addEventListener('input', (e) => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          renderPlugins(e.target.value);
+        }, 300);
+      });
+    }
+
+    function showAlert(message, type = 'warning') {
+      const container = document.getElementById('alert-container');
+      const alertClass = type === 'error' ? 'alert-error' : type === 'success' ? 'alert-success' : '';
+      container.innerHTML = `<div class="alert ${alertClass}">${escapeHtml(message)}</div>`;
+    }
+
+    function clearAlert() {
+      document.getElementById('alert-container').innerHTML = '';
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function minimizeWindow() {
+      if (window.electronAPI && window.electronAPI.minimize) {
+        window.electronAPI.minimize();
+      }
+    }
+
+    function maximizeWindow() {
+      if (window.electronAPI && window.electronAPI.maximize) {
+        window.electronAPI.maximize();
+      }
+    }
+
+    // Initialize on load
+    init();
+  </script>
+</body>
+</html>

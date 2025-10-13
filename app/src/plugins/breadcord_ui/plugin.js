@@ -80,13 +80,13 @@ const messageStatusElement = breadcord_message_status;
 // Debug Light/Dark Theme Toggle
 const root = document.documentElement;
 root.classList.add('dark');
-document.addEventListener('keydown', (e) => {
-  if (e.key.toLowerCase() === 'p' && !e.repeat && (e.ctrlKey || e.metaKey)) {
-    root.classList.toggle('dark');
-    root.classList.toggle('light');
-    e.preventDefault();
-  }
-});
+// document.addEventListener('keydown', (e) => {
+//   if (e.key.toLowerCase() === 'p' && !e.repeat && (e.ctrlKey || e.metaKey)) {
+//     root.classList.toggle('dark');
+//     root.classList.toggle('light');
+//     e.preventDefault();
+//   }
+// });
 
 // Load Breadcord CSS
 const link = document.createElement('link');
