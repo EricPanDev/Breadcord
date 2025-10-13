@@ -125,6 +125,7 @@ function resetMessagePane(message = DEFAULT_MESSAGE_STATUS_TEXT) {
   if (listDom) {
     listDom.innerHTML = '';
     delete listDom.dataset.channelId;
+    delete listDom.dataset.guildId;
   }
   messageHeaderElement.setText(DEFAULT_MESSAGE_HEADER_TEXT);
   showMessageStatus(message);
@@ -1631,6 +1632,11 @@ function renderMessages(messages, guild, channelId) {
   if (listDom) {
     listDom.innerHTML = '';
     listDom.dataset.channelId = channelId;
+    if (guild && guild.id) {
+      listDom.dataset.guildId = guild.id;
+    } else {
+      delete listDom.dataset.guildId;
+    }
   }
 
   if (!Array.isArray(messages) || !listDom) return;
@@ -2131,6 +2137,11 @@ async function handleChannelSelect(guild, channel, container) {
   if (listDom) {
     listDom.innerHTML = '';
     listDom.dataset.channelId = channel.id;
+    if (guild && guild.id) {
+      listDom.dataset.guildId = guild.id;
+    } else {
+      delete listDom.dataset.guildId;
+    }
   }
 
   messageHeaderElement.setText(channel.name ? `#${channel.name}` : 'Messages');

@@ -68,6 +68,17 @@ function handle_ws(token) {
       let pkt;
       try { pkt = JSON.parse(buf.toString()); } catch { return; }
 
+      // DEBUG
+      let i = 1;
+      try {
+        const pkt = JSON.parse(buf.toString());
+        if (JSON.stringify(pkt).includes('1421654303562665984')) {
+          fs.mkdirSync('temp', { recursive: true });
+          fs.writeFileSync(`temp/${i++}.json`, JSON.stringify(pkt));
+        }
+      } catch {}
+      // END DEBUG
+
       if (mainWin && !mainWin.isDestroyed()) {
         mainWin.webContents.send('discord-gateway-message', pkt);
       }
