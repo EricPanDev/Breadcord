@@ -438,7 +438,6 @@ app.whenReady().then(() => {
   });
 });
 
-const fs   = require('node:fs');
 // BreadAPI 
 function getPlugins() {
   const pluginsDir = path.join(__dirname, 'src', 'plugins');
