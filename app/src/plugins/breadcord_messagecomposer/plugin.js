@@ -2956,6 +2956,10 @@
       slashFormState: null,
       inlineChoicesMenu,
       currentOptionContext: null,
+      autocompleteDebounceTimer: null,
+      autocompleteCache: new Map(),
+      pendingAutocompleteNonce: null,
+      mentionMap: new Map(), // Track @username -> userId mappings
     };
 
     renderAttachments();
