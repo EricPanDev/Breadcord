@@ -38,6 +38,7 @@
     autocompleteDebounceTimer: null,
     autocompleteCache: new Map(),
     pendingAutocompleteNonce: null, // Track pending autocomplete request
+    mentionMap: new Map(), // Track @username -> userId mappings
   };
 
   function handleGatewayPacket(packet) {
@@ -932,6 +933,148 @@
               setTimeout(() => nextInput.focus(), 0);
             }
           }
+        }
+      });
+      
+      composerState.inlineChoicesMenu.appendChild(choiceEl);
+    });
+  }
+
+  function showMentionMenu(searchQuery) {
+    if (!composerState.inlineChoicesMenu || !composerState.textarea) return;
+    
+    // Get current guild ID
+    const guildId = getCurrentGuildId();
+    if (!guildId) {
+      hideInlineChoicesMenu();
+      return;
+    }
+    
+    // Try to get cached members from BreadCache
+    let members = [];
+    try {
+      if (typeof BreadCache?.getGuild === 'function') {
+        const guild = BreadCache.getGuild(guildId);
+        if (guild && guild.members) {
+          // Members can be stored as an array or object/Map
+          if (Array.isArray(guild.members)) {
+            members = guild.members;
+          } else if (guild.members instanceof Map) {
+            members = Array.from(guild.members.values());
+          } else if (typeof guild.members === 'object') {
+            members = Object.values(guild.members);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Could not fetch guild members:', e);
+    }
+    
+    if (members.length === 0) {
+      hideInlineChoicesMenu();
+      return;
+    }
+    
+    // Filter members based on search query
+    const search = (searchQuery || '').toLowerCase();
+    let filteredMembers;
+    
+    if (search) {
+      // Filter by search term
+      filteredMembers = members.filter(member => {
+        const user = member.user;
+        if (!user) return false;
+        
+        const username = (user.username || '').toLowerCase();
+        const globalName = (user.global_name || '').toLowerCase();
+        const id = user.id || '';
+        
+        return username.includes(search) || 
+               globalName.includes(search) || 
+               id.includes(search);
+      }).slice(0, 50); // Limit to 50 members
+    } else {
+      // Show first 50 members when no search
+      filteredMembers = members.slice(0, 50);
+    }
+    
+    if (filteredMembers.length === 0) {
+      hideInlineChoicesMenu();
+      return;
+    }
+    
+    // Show the inline choices menu with members
+    composerState.inlineChoicesMenu.innerHTML = '';
+    composerState.inlineChoicesMenu.hidden = false;
+    
+    filteredMembers.forEach(member => {
+      const user = member.user;
+      if (!user) return;
+      
+      const choiceEl = document.createElement('button');
+      choiceEl.type = 'button';
+      choiceEl.className = 'breadcord-message-composer__inline-choice breadcord-message-composer__member-choice';
+      
+      // Add avatar
+      const avatar = document.createElement('img');
+      avatar.className = 'breadcord-message-composer__member-avatar';
+      const avatarHash = user.avatar;
+      if (avatarHash) {
+        const extension = avatarHash.startsWith('a_') ? 'gif' : 'png';
+        avatar.src = `https://cdn.discordapp.com/avatars/${user.id}/${avatarHash}.${extension}?size=32`;
+      } else {
+        // Default avatar
+        const defaultAvatarIndex = user.discriminator ? parseInt(user.discriminator) % 5 : (parseInt(user.id) >> 22) % 6;
+        avatar.src = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarIndex}.png`;
+      }
+      avatar.alt = '';
+      choiceEl.appendChild(avatar);
+      
+      // Add text container
+      const textContainer = document.createElement('div');
+      textContainer.className = 'breadcord-message-composer__member-text';
+      
+      const choiceName = document.createElement('div');
+      choiceName.className = 'breadcord-message-composer__inline-choice-name';
+      choiceName.textContent = user.global_name || user.username || 'Unknown User';
+      textContainer.appendChild(choiceName);
+      
+      const choiceDesc = document.createElement('div');
+      choiceDesc.className = 'breadcord-message-composer__inline-choice-desc';
+      choiceDesc.textContent = `@${user.username || 'unknown'}`;
+      textContainer.appendChild(choiceDesc);
+      
+      choiceEl.appendChild(textContainer);
+      
+      choiceEl.addEventListener('click', () => {
+        // Replace @search with mention
+        const cursorPos = composerState.textarea.selectionStart;
+        const text = composerState.textarea.value;
+        const textBeforeCursor = text.substring(0, cursorPos);
+        const textAfterCursor = text.substring(cursorPos);
+        
+        // Find the @ symbol position
+        const atMatch = textBeforeCursor.match(/@(\w*)$/);
+        if (atMatch) {
+          const atPos = textBeforeCursor.lastIndexOf('@');
+          
+          // Use @username format for better readability
+          const mention = `@${user.username}`;
+          const newText = text.substring(0, atPos) + mention + ' ' + textAfterCursor;
+          
+          composerState.textarea.value = newText;
+          const newCursorPos = atPos + mention.length + 1;
+          composerState.textarea.setSelectionRange(newCursorPos, newCursorPos);
+          composerState.textarea.focus();
+          
+          // Store mention mapping for sending
+          if (!composerState.mentionMap) {
+            composerState.mentionMap = new Map();
+          }
+          composerState.mentionMap.set(`@${user.username}`, user.id);
+          
+          autoSizeTextarea(composerState.textarea);
+          hideInlineChoicesMenu();
         }
       });
       
@@ -2521,7 +2664,16 @@
       pendingAttachments.push(...options.attachments);
     }
     const textareaValue = composerState.textarea ? composerState.textarea.value : '';
-    const content = options.content !== undefined ? options.content : textareaValue;
+    let content = options.content !== undefined ? options.content : textareaValue;
+    
+    // Convert @username mentions to <@userid> format for sending
+    if (composerState.mentionMap && composerState.mentionMap.size > 0) {
+      composerState.mentionMap.forEach((userId, username) => {
+        const regex = new RegExp(username.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+        content = content.replace(regex, `<@${userId}>`);
+      });
+    }
+    
     const trimmed = typeof content === 'string' ? content.trim() : '';
     if (!pendingAttachments.length && (!content || !trimmed)) {
       return; // ignore empty submissions
@@ -2590,6 +2742,7 @@
         syncSlashMenuWithTextarea();
       }
       clearAttachments();
+      composerState.mentionMap.clear(); // Clear mention mappings after successful send
     } catch (err) {
       const apiMessage = err?.data?.message || err?.message;
       const errorMessage = apiMessage || 'Failed to send message. Please try again.';
@@ -2646,8 +2799,27 @@
         // Still valid, update the choices menu
         updateInlineChoicesMenu();
       } else {
-        // Otherwise, update the slash command menu
-        updateSlashMenuFromValue(value);
+        // Check for @ mention trigger
+        const cursorPos = event.target.selectionStart;
+        const textBeforeCursor = value.substring(0, cursorPos);
+        const atMatch = textBeforeCursor.match(/@(\w*)$/);
+        
+        if (atMatch) {
+          // Show mention menu
+          const searchQuery = atMatch[1];
+          showMentionMenu(searchQuery);
+        } else {
+          // Hide mention menu if visible
+          if (composerState.inlineChoicesMenu && !composerState.inlineChoicesMenu.hidden) {
+            // Only hide if it's showing mentions, not slash command stuff
+            if (!composerState.slashSelectedCommand) {
+              hideInlineChoicesMenu();
+            }
+          }
+          
+          // Otherwise, update the slash command menu
+          updateSlashMenuFromValue(value);
+        }
       }
     }
   }
