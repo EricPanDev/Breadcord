@@ -1,5 +1,7 @@
 const { app, BrowserWindow, screen, ipcMain } = require('electron');
 const path = require('path');
+const os = require('os');
+const fs = require('fs');
 const windowStateKeeper = require('electron-window-state');
 const WebSocket = require('ws');
 // const BreadcordVoiceHandler = require("./BreadcordVoiceHandler"); // Not used - voice handler is in plugin
@@ -22,6 +24,161 @@ let currentToken = null;
 
 const DISCORD_API_BASE = 'https://discord.com/api/v10';
 const DISCORD_USER_AGENT = 'Breadcord/2.0.0 (+https://github.com/ericpandev/Breadcord)';
+
+// Storage for persistent UUIDs
+const UUID_STORAGE_PATH = path.join(app.getPath('userData'), 'super-properties-uuids.json');
+let persistentUUIDs = null;
+
+/**
+ * Generates a UUID v4
+ * @returns {string} UUID string
+ */
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+/**
+ * Load or generate persistent UUIDs
+ * @returns {object} Object containing persistent UUIDs
+ */
+function getPersistentUUIDs() {
+  if (persistentUUIDs) {
+    return persistentUUIDs;
+  }
+
+  try {
+    if (fs.existsSync(UUID_STORAGE_PATH)) {
+      const data = fs.readFileSync(UUID_STORAGE_PATH, 'utf8');
+      persistentUUIDs = JSON.parse(data);
+      console.log('[Super-Properties] Loaded persistent UUIDs');
+      return persistentUUIDs;
+    }
+  } catch (error) {
+    console.error('[Super-Properties] Failed to load UUIDs:', error);
+  }
+
+  // Generate new UUIDs
+  persistentUUIDs = {
+    client_launch_id: generateUUID(),
+    launch_signature: generateUUID(),
+    client_heartbeat_session_id: generateUUID()
+  };
+
+  try {
+    fs.writeFileSync(UUID_STORAGE_PATH, JSON.stringify(persistentUUIDs, null, 2));
+    console.log('[Super-Properties] Generated and saved new UUIDs');
+  } catch (error) {
+    console.error('[Super-Properties] Failed to save UUIDs:', error);
+  }
+
+  return persistentUUIDs;
+}
+
+/**
+ * Get OS information for super properties
+ * @returns {object} Object containing OS name and version
+ */
+function getOSInfo() {
+  const platform = os.platform();
+  const release = os.release();
+
+  switch (platform) {
+    case 'darwin':
+      return {
+        os: 'Mac OS X',
+        os_version: release
+      };
+    case 'win32':
+      return {
+        os: 'Windows',
+        os_version: release
+      };
+    case 'linux':
+      return {
+        os: 'Linux',
+        os_version: release
+      };
+    default:
+      return {
+        os: platform,
+        os_version: release
+      };
+  }
+}
+
+/**
+ * Get browser user agent based on OS
+ * @returns {object} Object containing browser info
+ */
+function getBrowserInfo() {
+  const platform = os.platform();
+  const osInfo = getOSInfo();
+
+  switch (platform) {
+    case 'darwin':
+      return {
+        browser: 'Chrome',
+        browser_user_agent: `Mozilla/5.0 (Macintosh; Intel Mac OS X ${osInfo.os_version.replace(/\./g, '_')}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36`,
+        browser_version: '141.0.0.0'
+      };
+    case 'win32':
+      return {
+        browser: 'Chrome',
+        browser_user_agent: `Mozilla/5.0 (Windows NT ${osInfo.os_version}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36`,
+        browser_version: '141.0.0.0'
+      };
+    case 'linux':
+      return {
+        browser: 'Chrome',
+        browser_user_agent: `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36`,
+        browser_version: '141.0.0.0'
+      };
+    default:
+      return {
+        browser: 'Chrome',
+        browser_user_agent: 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36',
+        browser_version: '141.0.0.0'
+      };
+  }
+}
+
+/**
+ * Generates the X-Super-Properties header value for Discord API requests
+ * @returns {string} Base64 encoded JSON string
+ */
+function generateSuperPropertiesHeader() {
+  const uuids = getPersistentUUIDs();
+  const osInfo = getOSInfo();
+  const browserInfo = getBrowserInfo();
+
+  const superProperties = {
+    os: osInfo.os,
+    browser: browserInfo.browser,
+    device: "",
+    system_locale: "en-US",
+    has_client_mods: false,
+    browser_user_agent: browserInfo.browser_user_agent,
+    browser_version: browserInfo.browser_version,
+    os_version: osInfo.os_version,
+    referrer: "https://discord.com/",
+    referring_domain: "discord.com",
+    referrer_current: "",
+    referring_domain_current: "",
+    release_channel: "stable",
+    client_build_number: 457174,
+    client_event_source: null,
+    client_launch_id: uuids.client_launch_id,
+    launch_signature: uuids.launch_signature,
+    client_heartbeat_session_id: uuids.client_heartbeat_session_id,
+    client_app_state: "focused"
+  };
+  
+  return Buffer.from(JSON.stringify(superProperties)).toString('base64');
+}
 
 function handle_ws(token) {
   currentToken = token;
@@ -409,6 +566,7 @@ ipcMain.handle('discord-rest', async (_event, request = {}) => {
   const baseHeaders = {
     Authorization: currentToken,
     'User-Agent': DISCORD_USER_AGENT,
+    'X-Super-Properties': generateSuperPropertiesHeader(),
     ...headers,
   };
 
