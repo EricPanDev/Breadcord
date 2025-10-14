@@ -1,6 +1,136 @@
 (function () {
   const STYLE_PATH = 'plugins/breadcord_messagerenderer/message.css';
 
+  // Message options button registry
+  const messageOptionsButtons = [];
+
+  // SVG Icons
+  const icons = {
+    react: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>',
+    reply: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg>',
+    delete: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>'
+  };
+
+  /**
+   * Register a message option button
+   * @param {Object} button - Button configuration
+   * @param {string} button.id - Unique button identifier
+   * @param {string} button.label - Button label/tooltip
+   * @param {string} button.icon - Button icon (SVG string or emoji)
+   * @param {Function} button.onClick - Click handler (message, event) => void
+   * @param {number} [button.order] - Display order (lower numbers appear first)
+   * @returns {Function} Unregister function
+   */
+  function registerMessageOptionButton(button) {
+    if (!button || typeof button.onClick !== 'function') {
+      console.error('[breadcord_messagerenderer] Invalid button configuration');
+      return () => {};
+    }
+    const buttonConfig = {
+      id: button.id || `btn-${Date.now()}-${Math.random()}`,
+      label: button.label || '',
+      icon: button.icon || '•',
+      onClick: button.onClick,
+      order: button.order ?? 100
+    };
+    messageOptionsButtons.push(buttonConfig);
+    messageOptionsButtons.sort((a, b) => a.order - b.order);
+    
+    return () => {
+      const index = messageOptionsButtons.indexOf(buttonConfig);
+      if (index > -1) {
+        messageOptionsButtons.splice(index, 1);
+      }
+    };
+  }
+
+  /**
+   * Unregister a message option button by ID
+   * @param {string} id - Button ID to remove
+   */
+  function unregisterMessageOptionButton(id) {
+    const index = messageOptionsButtons.findIndex(btn => btn.id === id);
+    if (index > -1) {
+      messageOptionsButtons.splice(index, 1);
+    }
+  }
+
+  /**
+   * Create message options toolbar
+   * @param {Object} message - The message object
+   * @param {Object} options - Render options
+   * @returns {HTMLElement} Toolbar element
+   */
+  function createMessageOptionsToolbar(message, options) {
+    const toolbar = el('div', 'breadcord-message__options-toolbar');
+    toolbar.setAttribute('aria-label', 'Message options');
+
+
+    // Permission helpers
+    function canDeleteMessage(msg, opts) {
+      const currentUserId = resolveCurrentUserId(opts);
+      if (!currentUserId) return false;
+      // Author check
+      if (msg.author && (msg.author.id === currentUserId || msg.author.user_id === currentUserId)) return true;
+      if (msg.user_id && msg.user_id === currentUserId) return true;
+
+      // Guild MANAGE_MESSAGES permission check
+      const guildId = msg.guild_id || msg.guildId;
+      if (guildId && typeof window !== 'undefined' && window.BreadCache && typeof window.BreadCache.getGuild === 'function') {
+        const guild = window.BreadCache.getGuild(guildId);
+        if (guild && guild.members) {
+          let member = null;
+          if (Array.isArray(guild.members)) {
+            member = guild.members.find(m => m.user?.id === currentUserId || m.id === currentUserId);
+          } else if (typeof guild.members.get === 'function') {
+            member = guild.members.get(currentUserId);
+          } else if (guild.members[currentUserId]) {
+            member = guild.members[currentUserId];
+          }
+          if (member && member.permissions) {
+            // MANAGE_MESSAGES = 1 << 13
+            if ((typeof member.permissions === 'bigint' ? member.permissions : BigInt(member.permissions || 0)) & BigInt(1 << 13)) {
+              return true;
+            }
+          }
+        }
+      }
+      return false;
+    }
+
+    // Create buttons from registry, filter delete button by permission
+    messageOptionsButtons.forEach(btnConfig => {
+      if (btnConfig.id === 'delete' && !canDeleteMessage(message, options)) {
+        return; // skip delete button if not allowed
+      }
+      const btn = el('button', 'breadcord-message__option-btn');
+      btn.type = 'button';
+      btn.title = btnConfig.label;
+      btn.setAttribute('aria-label', btnConfig.label);
+      btn.dataset.optionId = btnConfig.id;
+
+      // Handle SVG icons vs text/emoji
+      if (btnConfig.icon.startsWith('<svg')) {
+        btn.innerHTML = btnConfig.icon;
+      } else {
+        btn.textContent = btnConfig.icon;
+      }
+
+      btn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        try {
+          btnConfig.onClick(message, event, options);
+        } catch (err) {
+          console.error(`[breadcord_messagerenderer] Button ${btnConfig.id} error:`, err);
+        }
+      });
+
+      toolbar.appendChild(btn);
+    });
+
+    return toolbar;
+  }
+
   function ensureStylesheet() {
     if (document.querySelector(`link[href="${STYLE_PATH}"]`)) return;
     const link = document.createElement('link');
@@ -2994,10 +3124,94 @@ function resolveMessageAuthorColor(message, options = {}) {
       });
     }
     const rr = renderReactions(reactions); if (rr) body.appendChild(rr);
+    
+    // Add message options toolbar
+    const toolbar = createMessageOptionsToolbar(message, options);
+    root.appendChild(toolbar);
+    
     root.appendChild(body); return root;
   }
 
   function createExampleMessage(overrides = {}) { const now = new Date(); return Object.assign({ id: `demo-${now.getTime()}`, author: { id: 'demo', username: 'BreadBot', displayName: 'Bread Bot', avatarUrl: 'https://cdn.discordapp.com/embed/avatars/0.png' }, content: 'Hello from BreadcordMessageRenderer!\nThis is a sample message.', timestamp: now.toISOString(), attachments: [], embeds: [], reactions: [] }, overrides); }
 
-  window.BreadcordMessageRenderer = Object.freeze({ renderMessage, renderAttachments, renderEmbeds, renderReactions, fmtTs, createExampleMessage });
+  // Register default buttons
+  (function registerDefaultButtons() {
+    // Reply button
+    registerMessageOptionButton({
+      id: 'reply',
+      label: 'Reply',
+      icon: icons.reply,
+      order: 1,
+      onClick: (message) => {
+        console.log('[breadcord_messagerenderer] Reply to message:', message.id);
+        // TODO: Implement reply functionality
+        // This could trigger the composer to reply to this message
+        if (window.BreadcordMessageComposer && typeof window.BreadcordMessageComposer.startReply === 'function') {
+          window.BreadcordMessageComposer.startReply(message);
+        } else {
+          console.warn('[breadcord_messagerenderer] Reply functionality not available');
+        }
+      }
+    });
+
+    // React button
+    registerMessageOptionButton({
+      id: 'react',
+      label: 'Add Reaction',
+      icon: icons.react,
+      order: 2,
+      onClick: (message) => {
+        console.log('[breadcord_messagerenderer] React to message:', message.id);
+        // TODO: Implement reaction picker
+        alert('Reaction picker not yet implemented');
+      }
+    });
+
+    // Delete button
+    registerMessageOptionButton({
+      id: 'delete',
+      label: 'Delete Message',
+      icon: icons.delete,
+      order: 3,
+      onClick: async (message) => {
+        const channelId = message.channel_id || message.channelId;
+        if (!channelId || !message.id) {
+          console.error('[breadcord_messagerenderer] Missing channel or message ID');
+          return;
+        }
+
+        if (!confirm('Are you sure you want to delete this message?')) {
+          return;
+        }
+
+        try {
+          const result = await BreadAPI.rest.request({
+            method: 'DELETE',
+            path: `/channels/${channelId}/messages/${message.id}`
+          });
+
+          if (result.ok) {
+            console.log('[breadcord_messagerenderer] Message deleted:', message.id);
+          } else {
+            console.error('[breadcord_messagerenderer] Failed to delete message:', result);
+            alert(`Failed to delete message: ${result.error || 'Unknown error'}`);
+          }
+        } catch (err) {
+          console.error('[breadcord_messagerenderer] Delete error:', err);
+          alert(`Error deleting message: ${err.message || 'Unknown error'}`);
+        }
+      }
+    });
+  })();
+
+  window.BreadcordMessageRenderer = Object.freeze({ 
+    renderMessage, 
+    renderAttachments, 
+    renderEmbeds, 
+    renderReactions, 
+    fmtTs, 
+    createExampleMessage,
+    registerMessageOptionButton,
+    unregisterMessageOptionButton
+  });
   })();

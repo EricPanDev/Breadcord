@@ -671,8 +671,71 @@
   const userBadgeCache = new Map();
   const BADGE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+  // Global batch fetch promise to deduplicate requests
+  let badgeBatchPromise = null;
+  let badgeBatchUserIds = null;
+
   /**
-   * Get badge data for a user (with caching)
+   * Batch fetch badge data for all visible users (deduplicated, all types in one request)
+   */
+  async function batchFetchAllVisibleUserBadges() {
+    if (!SapphireIntegration.initialized) return;
+
+    // Gather all visible user IDs needing badge data
+    const userIdsToFetch = new Set();
+    const elements = document.querySelectorAll('.breadcord-message[data-author-id]');
+    elements.forEach(el => {
+      const uid = el.dataset.authorId;
+      if (uid && (!userBadgeCache.has(uid) || (Date.now() - (userBadgeCache.get(uid)?.timestamp || 0) > BADGE_CACHE_TTL))) {
+        userIdsToFetch.add(uid);
+      }
+    });
+    if (userIdsToFetch.size === 0) return;
+
+    // Deduplicate: if a batch for this set is in progress, return that
+    const userIdsArr = Array.from(userIdsToFetch).sort();
+    const userIdsKey = userIdsArr.join(',');
+    if (badgeBatchPromise && badgeBatchUserIds === userIdsKey) {
+      return badgeBatchPromise;
+    }
+
+    badgeBatchUserIds = userIdsKey;
+    badgeBatchPromise = (async () => {
+      let result;
+      try {
+        // Single request for all users, all types
+        result = await SapphireIntegration.mass_fetch(userIdsArr);
+      } catch (err) {
+        console.error('[SapphireIntegration] Failed to batch fetch badge data:', err);
+        badgeBatchPromise = null;
+        badgeBatchUserIds = null;
+        return;
+      }
+      // Populate cache for all fetched users
+      userIdsArr.forEach(uid => {
+        const userCases = result[uid]?.cases || [];
+        // Count each type
+        let warns = 0, kicks = 0, bans = 0, mutes = 0;
+        userCases.forEach(c => {
+          if (c.type === 'warn') warns++;
+          else if (c.type === 'kick') kicks++;
+          else if (c.type === 'ban') bans++;
+          else if (c.type === 'mute') mutes++;
+        });
+        const data = { warns, kicks, bans, mutes };
+        userBadgeCache.set(uid, {
+          data,
+          timestamp: Date.now()
+        });
+      });
+      badgeBatchPromise = null;
+      badgeBatchUserIds = null;
+    })();
+    return badgeBatchPromise;
+  }
+
+  /**
+   * Get badge data for a user (with caching, batch-aware, deduplicated)
    */
   async function getUserBadgeData(userId) {
     // Check cache first
@@ -681,38 +744,11 @@
       return cached.data;
     }
 
-    // Fetch from API if configured
-    if (!SapphireIntegration.initialized) {
-      return null;
-    }
+    // Fetch batch for all visible users (deduplicated)
+    await batchFetchAllVisibleUserBadges();
 
-    try {
-      // Fetch different case types (including mutes)
-      const [warns, kicks, bans, mutes] = await Promise.all([
-        SapphireIntegration.fetch(userId, 'warn').catch(() => ({ total_cases: 0 })),
-        SapphireIntegration.fetch(userId, 'kick').catch(() => ({ total_cases: 0 })),
-        SapphireIntegration.fetch(userId, 'ban').catch(() => ({ total_cases: 0 })),
-        SapphireIntegration.fetch(userId, 'mute').catch(() => ({ total_cases: 0 }))
-      ]);
-
-      const data = {
-        warns: warns.total_cases || 0,
-        kicks: kicks.total_cases || 0,
-        bans: bans.total_cases || 0,
-        mutes: mutes.total_cases || 0
-      };
-
-      // Cache the result
-      userBadgeCache.set(userId, {
-        data,
-        timestamp: Date.now()
-      });
-
-      return data;
-    } catch (err) {
-      console.error('[SapphireIntegration] Failed to fetch badge data:', err);
-      return null;
-    }
+    // Return from cache (may still be missing if not visible)
+    return userBadgeCache.get(userId)?.data || null;
   }
 
   /**

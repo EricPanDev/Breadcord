@@ -9,6 +9,7 @@
   background-color: var(--message-bg, transparent);
   box-sizing: border-box;
   padding-bottom: 0 !important;
+  position: relative;
 }
 
 .breadcord-message:hover {
@@ -23,6 +24,77 @@
 
 .breadcord-message--mentioned:hover {
   background-color: var(--message-mention-hover-bg, rgba(255, 214, 64, 0.058));
+}
+
+/* Message Options Toolbar */
+.breadcord-message__options-toolbar {
+  position: absolute;
+  top: -12px;
+  right: 16px;
+  display: none;
+  flex-direction: row;
+  gap: 0;
+  z-index: 10;
+}
+
+.breadcord-message:hover .breadcord-message__options-toolbar {
+  display: flex;
+}
+
+.breadcord-message__option-btn {
+  background: var(--btn-bg, rgba(30, 30, 30, 0.95));
+  border: 1px solid var(--toolbar-border, rgba(255, 255, 255, 0.1));
+  border-radius: 0;
+  padding: 6px 8px;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 120ms ease, transform 80ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  margin-left: -1px;
+  color: var(--btn-icon-color, rgba(255, 255, 255, 0.7));
+}
+
+.breadcord-message__option-btn svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  fill: none;
+}
+
+.breadcord-message__option-btn:first-child {
+  border-radius: 6px 0 0 6px;
+  margin-left: 0;
+}
+
+.breadcord-message__option-btn:last-child {
+  border-radius: 0 6px 6px 0;
+}
+
+.breadcord-message__option-btn:only-child {
+  border-radius: 6px;
+}
+
+.breadcord-message__option-btn:hover {
+  background: var(--btn-hover-bg, rgba(50, 50, 50, 0.95));
+  color: var(--btn-icon-hover-color, rgba(255, 255, 255, 0.9));
+  z-index: 1;
+}
+
+.breadcord-message__option-btn:active {
+  transform: scale(0.95);
+}
+
+.breadcord-message__option-btn:focus-visible {
+  outline: 2px solid var(--btn-focus, rgba(255, 255, 255, 0.4));
+  outline-offset: 2px;
+  z-index: 2;
 }
 
 .breadcord-message__avatar {
