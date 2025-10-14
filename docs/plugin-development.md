@@ -39,13 +39,12 @@ The `plugin.json` file contains metadata about your plugin:
 
 ```json
 {
-  "name": "my-plugin",
-  "displayName": "My Awesome Plugin",
+  "id": "my-plugin",
+  "name": "My Awesome Plugin",
   "version": "1.0.0",
   "description": "A plugin that does awesome things",
   "author": "Your Name",
   "dependencies": ["breadcore"],
-  "permissions": ["ui", "messages"]
 }
 ```
 
