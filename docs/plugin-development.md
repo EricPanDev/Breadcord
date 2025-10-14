@@ -44,7 +44,7 @@ The `plugin.json` file contains metadata about your plugin:
   "version": "1.0.0",
   "description": "A plugin that does awesome things",
   "author": "Your Name",
-  "deps": ["breadcore"],
+  "dependencies": ["breadcore"],
   "permissions": ["ui", "messages"]
 }
 ```
